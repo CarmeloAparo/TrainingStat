@@ -1,2 +1,2 @@
 # MSSS
-Andoird appliccation for statistics about soccer player movements and heatmap 
+Android application for soccer player statistics and heatmap 
