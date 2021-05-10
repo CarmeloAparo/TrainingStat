@@ -12,8 +12,6 @@ import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,7 +19,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // retrieve all relevant references of the initial activity
         Button ConfirmButton = findViewById(R.id.ConfirmButton);
-
 
         ConfirmButton.setOnClickListener(this);
 
