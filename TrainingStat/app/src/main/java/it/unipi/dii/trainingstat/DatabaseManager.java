@@ -22,6 +22,11 @@ public class DatabaseManager {
                 .getReference().child(idTrainingSession.toString());
         this.idTrainingSession = idTrainingSession.toString();
     }
+
+    public void writeUserSession(UserSession session) {
+        String userKey = mDatabase.child(idTrainingSession).push().getKey();
+        mDatabase.child(userKey).setValue(session);
+    }
 }
 
 /*
