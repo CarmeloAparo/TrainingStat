@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1089164095870",
+    "project_id": "trainingstat-565d5",
+    "storage_bucket": "trainingstat-565d5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089164095870:android:04cc9105b74bd362a8c32f",
+        "android_client_info": {
+          "package_name": "it.unipi.dii.trainingstat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1089164095870-mrp67tbrvfmd7n768viamrdu3gknstrg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBl48f74QauEDv-FRpe7AXqbOKLp5lrWpE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1089164095870-mrp67tbrvfmd7n768viamrdu3gknstrg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
