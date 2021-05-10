@@ -21,33 +21,26 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/textViewInsertedUsername"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="46dp"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/editTextUsernameName"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
         android:id="@+id/textViewInsertUsername"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="46dp"
+        android:layout_marginTop="24dp"
         android:text="@string/insert_username_message"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/textViewInsertedUsername"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toTopOf="@+id/editTextUsernameName"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/editTextUsernameName"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="46dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="60dp"
         android:ems="10"
-        android:hint="@string/insert_name_placeolder"
+        android:hint="@string/insert_name_placeholder"
         android:importantForAccessibility="auto"
         android:importantForAutofill="no"
         android:inputType="textPersonName"

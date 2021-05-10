@@ -2,14 +2,17 @@ package it.unipi.dii.trainingstat;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,10 +32,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
 
         EditText UsernameInput = findViewById(R.id.editTextUsernameName);
-        TextView UsernameInsertedTextView = findViewById(R.id.textViewInsertedUsername);
 
         String Username = UsernameInput.getText().toString();
 
-        UsernameInsertedTextView.setText(Username);
+        Intent i = new Intent(this, MenuActivity.class);
+        i.putExtra("username", Username);
+        startActivity(i);
     }
 }
