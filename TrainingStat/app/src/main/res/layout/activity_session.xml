@@ -19,41 +19,41 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.075" />
 
-    <TextView
-        android:id="@+id/textViewTimer"
+
+    <Chronometer
+        android:id="@+id/chronometer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="34sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@+id/StartButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.221" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/StartButton"
         android:layout_width="wrap_content"
         android:layout_height="65dp"
-        android:layout_marginTop="196dp"
+        android:layout_marginTop="332dp"
+        android:onClick="startPauseButtonClicked"
         android:text="@string/start_button_text"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintHorizontal_bias="0.504"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewTimer"
-        android:onClick="startPauseButtonClicked"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/StopButton"
         android:layout_width="wrap_content"
         android:layout_height="65dp"
+        android:onClick="stopButtonClicked"
         android:text="@string/stop_button_text"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/StartButton"
-        app:layout_constraintVertical_bias="0.283"
-        android:onClick="stopButtonClicked"/>
+        app:layout_constraintVertical_bias="0.26" />
 </androidx.constraintlayout.widget.ConstraintLayout>
