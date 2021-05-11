@@ -10,8 +10,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TrainingStat">
         <activity android:name=".SessionActivity"></activity>
-        <activity android:name=".MenuActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name=".gui.MenuActivity" />
+        <activity android:name=".gui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

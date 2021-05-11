@@ -1,4 +1,4 @@
-package it.unipi.dii.trainingstat;
+package it.unipi.dii.trainingstat.gui;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.SessionActivity;
 
 public class MenuActivity extends AppCompatActivity {
 

@@ -1,4 +1,4 @@
-package it.unipi.dii.trainingstat;
+package it.unipi.dii.trainingstat.gui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +7,8 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import it.unipi.dii.trainingstat.R;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
