@@ -70,6 +70,12 @@ public class DatabaseManager {
         });
     }
 
+    public void updateUserIncrementalID(String username, int lastIncrementalID) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("lastIncrementalID", lastIncrementalID);
+        mDatabase.child("users").child(username).updateChildren(updates);
+    }
+
     public void writeTrainingSession(String id, TrainingSession trainingSession) {
         trainingSession.setTrainer(null);
         mDatabase.child("trainingSessions").child(id).setValue(trainingSession);
