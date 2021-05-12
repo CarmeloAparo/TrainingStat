@@ -16,7 +16,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import it.unipi.dii.trainingstat.gui.MainActivity;
@@ -43,7 +46,6 @@ public class DatabaseManager {
 
 
     public void getUser(String username, MainActivity m){
-
         mDatabase.child("users").child(username).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
@@ -51,19 +53,12 @@ public class DatabaseManager {
                     Log.e("Test", "Error on task", task.getException());
                 }
                 else {
-                    Log.d("Test", String.valueOf(task.getResult().getValue()));
                     DataSnapshot d = task.getResult();
                     User u;
-                    if(d.getValue() == null){
+                    if(d.getValue() == null) {
                         u = new User();
-                        u.addPastSession("{ id : data }");
-
-                        u.addPastSession("secondo");
-                        Log.d("Test", "count" + Integer.toString(u.getPastSessions().size()));
                         mDatabase.child("users").child(username).setValue(u);
-
-                    }else{
-                        Log.d("Test", "username retrieved: " + d.toString());
+                    } else {
                         u = new User(d.getValue(User.class));
                     }
                     u.setUsername(username);
@@ -71,7 +66,6 @@ public class DatabaseManager {
                 }
             }
         });
-        return;
     }
 
     public void writeTrainingSession(TrainingSession trainingSession){
