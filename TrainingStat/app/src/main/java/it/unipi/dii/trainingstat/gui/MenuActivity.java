@@ -11,10 +11,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.SessionActivity;
+import it.unipi.dii.trainingstat.User;
 
 public class MenuActivity extends AppCompatActivity {
 
     private String Username;
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,10 +24,11 @@ public class MenuActivity extends AppCompatActivity {
         setContentView(R.layout.activity_menu);
 
         Intent i = getIntent();
-        Username = i.getStringExtra("username");
+        //Username = i.getStringExtra("username");
+        user = (User) i.getSerializableExtra("User");
         TextView UsernameTextView = findViewById(R.id.menuUsernameTV);
-        UsernameTextView.setText(Username);
-
+        UsernameTextView.setText(user.getUsername());
+        Username = user.getUsername();
         // TODO recuperare lista last sessions se presente
 
     }

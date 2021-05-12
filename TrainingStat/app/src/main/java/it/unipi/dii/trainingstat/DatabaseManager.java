@@ -16,6 +16,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import it.unipi.dii.trainingstat.gui.MainActivity;
@@ -24,46 +25,49 @@ import it.unipi.dii.trainingstat.gui.UserSession;
 
 public class DatabaseManager {
     private DatabaseReference mDatabase;
-    private DatabaseReference userDatabase;
     private String idTrainingSession;
 
-    public DatabaseManager() {
-        // Connettersi al DB creando la sessione ed ottenendo l'ID
-    }
 
-    public DatabaseManager(String idTrainingSession) {
+
+    public DatabaseManager() {
         mDatabase = FirebaseDatabase
                 .getInstance("https://trainingstat-565d5-default-rtdb.europe-west1.firebasedatabase.app/")
-                .getReference().child(idTrainingSession);
-        this.idTrainingSession = idTrainingSession;
-        userDatabase = FirebaseDatabase
-                .getInstance("https://trainingstat-565d5-default-rtdb.europe-west1.firebasedatabase.app/")
-                .getReference().child("users");
+                .getReference();
+
     }
 
-    public void writeUser(User user) {
-        userDatabase.child(user.getUsername()).setValue(user);
-    }
+    // RIFARE COME UPDATE PER ID PAST SESSION DA AGGIORNARE
+    /*public void writeUser(User user) {
+        mDatabase.child("users").child(user.getUsername()).setValue(user);
+    }*/
 
 
     public void getUser(String username, MainActivity m){
 
-        userDatabase.child(username).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+        mDatabase.child("users").child(username).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 if (!task.isSuccessful()) {
-                    Log.e("Test", "Error getting data", task.getException());
+                    Log.e("Test", "Error on task", task.getException());
                 }
                 else {
                     Log.d("Test", String.valueOf(task.getResult().getValue()));
                     DataSnapshot d = task.getResult();
-                    User u = new User(d.getValue(User.class));
-                    Log.d("Test", "username retrieved: " + u.getUsername());
+                    User u;
+                    if(d.getValue() == null){
+                        u = new User();
+                        u.addPastSession("{ id : data }");
 
-                    Intent i = new Intent(m, MenuActivity.class);
-                    i.putExtra("username", u.getUsername());
-                    i.putExtra("User", u);
-                    m.startActivity(i);
+                        u.addPastSession("secondo");
+                        Log.d("Test", "count" + Integer.toString(u.getPastSessions().size()));
+                        mDatabase.child("users").child(username).setValue(u);
+
+                    }else{
+                        Log.d("Test", "username retrieved: " + d.toString());
+                        u = new User(d.getValue(User.class));
+                    }
+                    u.setUsername(username);
+                    m.changeActivity(u);
                 }
             }
         });

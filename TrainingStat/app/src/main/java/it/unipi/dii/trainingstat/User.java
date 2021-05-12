@@ -9,7 +9,11 @@ public class User implements Serializable {
     private int lastIncremental;
     private List<String> pastSessions;
 
-    public User(){}
+    public User(){
+        this.lastIncremental = 0;
+        this.pastSessions = new ArrayList<>();
+        //this.username = null;
+    }
 
     public User(String username){
         this.username = username;
@@ -22,6 +26,7 @@ public class User implements Serializable {
         this.lastIncremental = u.getLastIncremental();
         this.pastSessions = u.getPastSessions();
     }
+
     public String getUsername() {
         return username;
     }
@@ -44,5 +49,9 @@ public class User implements Serializable {
 
     public void setPastSessions(List<String> pastSessions) {
         this.pastSessions = pastSessions;
+    }
+
+    public void addPastSession(String session){
+        this.pastSessions.add(session);
     }
 }

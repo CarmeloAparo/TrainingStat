@@ -9,7 +9,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.User;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -39,13 +41,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }else {
 
-            /* TODO recuperare informazioni utente se esiste lo username
-             *  oppure inserire un nuovo ingresso nel DB per questo utente
-             */
+            DatabaseManager db = new DatabaseManager();
+            db.getUser(Username, this);
 
-            Intent i = new Intent(this, MenuActivity.class);
-            i.putExtra("username", Username);
-            startActivity(i);
         }
+    }
+
+    public void changeActivity(User u){
+        Intent i = new Intent(this, MenuActivity.class);
+        i.putExtra("User", u);
+        startActivity(i);
     }
 }
