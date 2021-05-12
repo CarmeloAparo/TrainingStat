@@ -8,7 +8,7 @@
     tools:context=".gui.MainActivity">
 
     <Button
-        android:id="@+id/ConfirmButton"
+        android:id="@+id/mainConfirmButton"
         android:layout_width="0dp"
         android:layout_height="60dp"
         android:layout_marginStart="100dp"
@@ -21,7 +21,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/textViewInsertUsername"
+        android:id="@+id/mainInsertUsernameTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
@@ -29,7 +29,7 @@
         android:textColor="#000000"
         android:textSize="34sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/editTextUsernameName"
+        app:layout_constraintBottom_toTopOf="@+id/mainUsernameET"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,7 +37,7 @@
         app:layout_constraintVertical_bias="0.543" />
 
     <EditText
-        android:id="@+id/editTextUsernameName"
+        android:id="@+id/mainUsernameET"
         android:layout_width="0dp"
         android:layout_height="70dp"
         android:layout_marginStart="32dp"
@@ -48,7 +48,7 @@
         android:importantForAccessibility="auto"
         android:importantForAutofill="no"
         android:inputType="textPersonName"
-        app:layout_constraintBottom_toTopOf="@+id/ConfirmButton"
+        app:layout_constraintBottom_toTopOf="@+id/mainConfirmButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />

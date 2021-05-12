@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         // retrieve all relevant references of the initial activity
-        Button ConfirmButton = findViewById(R.id.ConfirmButton);
+        Button ConfirmButton = findViewById(R.id.mainConfirmButton);
 
         ConfirmButton.setOnClickListener(this);
 
@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
 
-        EditText UsernameInput = findViewById(R.id.editTextUsernameName);
+        EditText UsernameInput = findViewById(R.id.mainUsernameET);
         String Username = UsernameInput.getText().toString();
 
         // the username "aggregatedResults" is not usable
@@ -38,6 +38,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(this, "Username not valid", Toast.LENGTH_SHORT).show();
 
         }else {
+
+            /* TODO recuperare informazioni utente se esiste lo username
+             *  oppure inserire un nuovo ingresso nel DB per questo utente
+             */
 
             Intent i = new Intent(this, MenuActivity.class);
             i.putExtra("username", Username);
