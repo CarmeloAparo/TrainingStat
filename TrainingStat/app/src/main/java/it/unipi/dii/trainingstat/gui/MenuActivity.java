@@ -50,8 +50,8 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     public TrainingSession startTrainingSession() {
-        int incrementalID = user.getLastIncrementalID() + 1;
-        String id = Username + "_" + incrementalID;
+        user.setLastIncrementalID(user.getLastIncrementalID() + 1);
+        String id = Username + "_" + user.getLastIncrementalID();
         @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Calendar calendar = Calendar.getInstance();
         String startDate = df.format(calendar.getTime());
@@ -59,7 +59,7 @@ public class MenuActivity extends AppCompatActivity {
                 null, null);
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.writeTrainingSession(trainingSession);
-        databaseManager.updateUserIncrementalID(Username, incrementalID);
+        databaseManager.updateUserIncrementalID(Username, user.getLastIncrementalID());
         user.addPastSession(id, startDate);
         databaseManager.addUserPastSessions(Username, user.getPastSessions());
         return trainingSession;
