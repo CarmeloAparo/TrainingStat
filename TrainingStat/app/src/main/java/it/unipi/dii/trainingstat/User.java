@@ -2,28 +2,30 @@ package it.unipi.dii.trainingstat;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class User implements Serializable {
     private String username;
-    private int lastIncremental;
-    private List<String> pastSessions;
+    private int lastIncrementalID;
+    private List<Map<String, String>> pastSessions;
 
     public User(){
-        this.lastIncremental = 0;
+        this.lastIncrementalID = 0;
         this.pastSessions = new ArrayList<>();
-        //this.username = null;
+        this.username = null;
     }
 
     public User(String username){
         this.username = username;
-        this.lastIncremental = 0;
+        this.lastIncrementalID = 0;
         this.pastSessions = new ArrayList<>();
     }
 
     public User(User u){
         this.username = u.getUsername();
-        this.lastIncremental = u.getLastIncremental();
+        this.lastIncrementalID = u.getLastIncrementalID();
         this.pastSessions = u.getPastSessions();
     }
 
@@ -31,11 +33,11 @@ public class User implements Serializable {
         return username;
     }
 
-    public int getLastIncremental() {
-        return lastIncremental;
+    public int getLastIncrementalID() {
+        return lastIncrementalID;
     }
 
-    public List<String> getPastSessions() {
+    public List<Map<String, String>> getPastSessions() {
         return pastSessions;
     }
 
@@ -43,15 +45,18 @@ public class User implements Serializable {
         this.username = username;
     }
 
-    public void setLastIncremental(int lastIncremental) {
-        this.lastIncremental = lastIncremental;
+    public void setLastIncrementalID(int lastIncrementalID) {
+        this.lastIncrementalID = lastIncrementalID;
     }
 
-    public void setPastSessions(List<String> pastSessions) {
+    public void setPastSessions(List<Map<String, String>> pastSessions) {
         this.pastSessions = pastSessions;
     }
 
-    public void addPastSession(String session){
-        this.pastSessions.add(session);
+    public void addPastSession(String sessionID, String date){
+        Map<String, String> session = new HashMap<>();
+        session.put("id", sessionID);
+        session.put("startDate", date);
+        pastSessions.add(session);
     }
 }
