@@ -76,6 +76,12 @@ public class DatabaseManager {
         mDatabase.child("users").child(username).updateChildren(updates);
     }
 
+    public void addUserPastSessions(String username, List<Map<String, String>> pastSessions) {
+        Map<String, Object> sessions = new HashMap<>();
+        sessions.put("pastSessions", pastSessions);
+        mDatabase.child("users").child(username).updateChildren(sessions);
+    }
+
     public void writeTrainingSession(String id, TrainingSession trainingSession) {
         trainingSession.setTrainer(null);
         mDatabase.child("trainingSessions").child(id).setValue(trainingSession);
