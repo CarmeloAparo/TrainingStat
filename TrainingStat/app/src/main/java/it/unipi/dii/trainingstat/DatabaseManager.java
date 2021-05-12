@@ -20,7 +20,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import it.unipi.dii.trainingstat.gui.MainActivity;
 import it.unipi.dii.trainingstat.gui.MenuActivity;
@@ -68,9 +70,9 @@ public class DatabaseManager {
         });
     }
 
-    public void writeTrainingSession(TrainingSession trainingSession){
-        mDatabase.setValue(trainingSession);
-
+    public void writeTrainingSession(String id, TrainingSession trainingSession) {
+        trainingSession.setTrainer(null);
+        mDatabase.child("trainingSessions").child(id).setValue(trainingSession);
     }
 
     public void writeUserSession(UserSession session) {
