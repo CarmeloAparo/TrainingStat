@@ -58,4 +58,6 @@ public class UserSession {
     public double getMeanSpeed() {
         return meanSpeed;
     }
+
+    public void setUsername(String username) { this.username = username; }
 }
