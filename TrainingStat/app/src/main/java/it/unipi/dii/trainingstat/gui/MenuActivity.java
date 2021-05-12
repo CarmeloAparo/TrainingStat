@@ -2,12 +2,17 @@ package it.unipi.dii.trainingstat.gui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.Map;
 
 import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.SessionActivity;
@@ -24,13 +29,20 @@ public class MenuActivity extends AppCompatActivity {
         setContentView(R.layout.activity_menu);
 
         Intent i = getIntent();
-        //Username = i.getStringExtra("username");
         user = (User) i.getSerializableExtra("User");
         TextView UsernameTextView = findViewById(R.id.menuUsernameTV);
         UsernameTextView.setText(user.getUsername());
         Username = user.getUsername();
-        // TODO recuperare lista last sessions se presente
-
+        int id = 0;
+        for (Map<String, String> session : user.getPastSessions()) {
+            Button button = new Button(this);
+            button.setText(session.get("startDate"));
+            button.setId(id);
+            button.setOnClickListener(pastSessionsButtonListener);
+            LinearLayout linearLayout = findViewById(R.id.pastSessionsLayout);
+            linearLayout.addView(button);
+            id++;
+        }
     }
 
     public void newCollectiveSessionButtonClicked(View v) {
@@ -74,5 +86,14 @@ public class MenuActivity extends AppCompatActivity {
         }
     }
 
+    private View.OnClickListener pastSessionsButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            /*TODO:
+            *   Sulla base di quale bottone è stato cliccato prelevare i dati della sessione dal DB
+            *   ed avviare l'activity che mostra i risultati
+            * */
+        }
+    };
 
 }
