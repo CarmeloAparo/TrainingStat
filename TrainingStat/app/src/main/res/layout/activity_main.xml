@@ -27,7 +27,7 @@
         android:layout_marginTop="24dp"
         android:text="@string/insert_username_message"
         android:textColor="#000000"
-        android:textSize="34sp"
+        android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/mainUsernameET"
         app:layout_constraintEnd_toEndOf="parent"

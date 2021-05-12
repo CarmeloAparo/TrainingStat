@@ -2,7 +2,7 @@
     <string name="app_name">Training Stat</string>
     <string name="confirm_button_text">CONFIRM</string>
     <string name="insert_name_placeholder">e.g. John Smith</string>
-    <string name="insert_username_message">INSERT USERNAME</string>
+    <string name="insert_username_message">Please insert your username</string>
     <string name="text_view_last_sessions">Last Sessions</string>
     <string name="new_collective_session_button_text">NEW COLLECTIVE SESSION</string>
     <string name="new_individual_session_button_text">NEW INDIVIDUAL SESSION</string>
@@ -11,5 +11,6 @@
     <string name="stop_button_text">STOP</string>
     <string name="pause_button_text">PAUSE</string>
     <string name="insert_session_id_placeholder">Pippo_2</string>
+    <string name="status_text_view_default">Ready</string>
 
 </resources>

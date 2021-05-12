@@ -3,6 +3,7 @@ package it.unipi.dii.trainingstat.gui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,7 +14,7 @@ import it.unipi.dii.trainingstat.SessionActivity;
 
 public class MenuActivity extends AppCompatActivity {
 
-    String Username;
+    private String Username;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,35 +30,45 @@ public class MenuActivity extends AppCompatActivity {
 
     }
 
-    public void newCollectiveSessionButtonClicked(View v){
+    public void newCollectiveSessionButtonClicked(View v) {
         Toast.makeText(this, "New collective session", Toast.LENGTH_SHORT).show();
 
         /* TODO: generate una nuova session ID e aggiornare il DB
-        *    lanciare la attività dell'allenatore */
+         *    lanciare la attività dell'allenatore */
 
     }
 
-    public void newIndividualSessionButtonClicked(View v){
+    public void newIndividualSessionButtonClicked(View v) {
 
         Intent i = new Intent(this, SessionActivity.class);
         i.putExtra("username", Username);
         /* TODO: generate una nuova session ID e aggiornare il DB
-        */
+         */
         i.putExtra("sessionId", Username + "_2"); // CAMBIARE QUESTO VALORE HARD CODED
         startActivity(i);
 
     }
 
-    public void joinCollectiveSessionButtonClicked(View v){
-        Toast.makeText(this, "Join collective session", Toast.LENGTH_SHORT).show();
+    public void joinCollectiveSessionButtonClicked(View v) {
 
+        EditText sessionIdToJoinET = findViewById(R.id.menuInsertSessionIdET);
+        String sessionIdToJoin = sessionIdToJoinET.getText().toString();
 
-        /* TODO: controllare che sia stato inserito qualcosa nell'edit text
-        *   controllare che la sessione esista e che abbia status "started"
-        *   in caso di errore mostrare un toast informativo
-        *   altrimenti avviare la prossima attività
-        */
+        // Don't even bother the DB with an empty session id
+        if (sessionIdToJoin.equals("")) {
 
+            Toast.makeText(this, "A session id must be provided", Toast.LENGTH_SHORT).show();
+
+        } else {
+
+            /* TODO:
+             *   controllare che la sessione esista e che abbia status "started"
+             *   in caso di errore mostrare un toast informativo
+             *   altrimenti avviare la prossima attività
+             */
+
+            Toast.makeText(this, "A session id has been provided", Toast.LENGTH_SHORT).show();
+        }
     }
 
 

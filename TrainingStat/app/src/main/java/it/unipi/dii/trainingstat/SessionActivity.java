@@ -15,19 +15,28 @@ public class SessionActivity extends AppCompatActivity {
     private Chronometer chronometer;
     private long pauseOffset; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean running;
+    private TextView StatusTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        // recupero session id
-        Intent i = getIntent();
-        String Username = i.getStringExtra("sessionId");
-        TextView UsernameTextView = findViewById(R.id.SessionId);
-        UsernameTextView.setText(Username);
+        StatusTV = findViewById(R.id.sessionStatusTV);
 
-        chronometer = findViewById(R.id.chronometer);
+        // recupero username e session id
+        Intent i = getIntent();
+        String Username = i.getStringExtra("username");
+        String sessionId = i.getStringExtra("sessionId");
+
+        // inizializzo le textView
+        TextView UsernameTextView = findViewById(R.id.sessionUsernameTV);
+        TextView SessionIdTextView = findViewById(R.id.sessionSessionIdTV);
+
+        UsernameTextView.setText(Username);
+        SessionIdTextView.setText(sessionId);
+
+        chronometer = findViewById(R.id.sessionChronometer);
 
     }
 
@@ -43,6 +52,7 @@ public class SessionActivity extends AppCompatActivity {
 
     private void startButtonClicked(Button startPauseButton) {
 
+        StatusTV.setText("Monitoring");
         startPauseButton.setText(R.string.pause_button_text);
 
         chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
@@ -56,6 +66,7 @@ public class SessionActivity extends AppCompatActivity {
 
     private void pauseButtonClicked(Button startPauseButton){
 
+        StatusTV.setText("Paused");
         startPauseButton.setText(R.string.start_button_text);
 
         chronometer.stop();
@@ -67,6 +78,9 @@ public class SessionActivity extends AppCompatActivity {
 
 
     public void stopButtonClicked(View view) {
+
+        StatusTV.setText("Ready");
+
         // ATTENZIONE QUESTA SAREBBE LA RESET QUINDI VA CAMBIATA
         chronometer.setBase(SystemClock.elapsedRealtime());
         pauseOffset = 0;
@@ -79,6 +93,7 @@ public class SessionActivity extends AppCompatActivity {
         */
 
     }
+
 
 }
 
