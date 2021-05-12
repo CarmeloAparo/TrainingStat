@@ -2,6 +2,8 @@ package it.unipi.dii.trainingstat;
 
 import java.util.List;
 
+import it.unipi.dii.trainingstat.gui.UserSession;
+
 public class TrainingSession {
     private String trainer;
     private boolean terminate;

@@ -18,6 +18,10 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
+import it.unipi.dii.trainingstat.gui.MainActivity;
+import it.unipi.dii.trainingstat.gui.MenuActivity;
+import it.unipi.dii.trainingstat.gui.UserSession;
+
 public class DatabaseManager {
     private DatabaseReference mDatabase;
     private DatabaseReference userDatabase;
