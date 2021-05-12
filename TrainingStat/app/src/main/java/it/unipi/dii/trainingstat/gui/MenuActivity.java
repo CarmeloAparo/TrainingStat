@@ -1,8 +1,8 @@
 package it.unipi.dii.trainingstat.gui;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,10 +12,14 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Map;
 
+import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.SessionActivity;
+import it.unipi.dii.trainingstat.TrainingSession;
 import it.unipi.dii.trainingstat.User;
 
 public class MenuActivity extends AppCompatActivity {
@@ -45,23 +49,34 @@ public class MenuActivity extends AppCompatActivity {
         }
     }
 
+    public TrainingSession startTrainingSession() {
+        int incrementalID = user.getLastIncrementalID() + 1;
+        String id = Username + "_" + incrementalID;
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Calendar calendar = Calendar.getInstance();
+        String startDate = df.format(calendar.getTime());
+        TrainingSession trainingSession = new TrainingSession(id, Username, "started", startDate,
+                null, null);
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.writeTrainingSession(trainingSession);
+        databaseManager.updateUserIncrementalID(Username, incrementalID);
+        user.addPastSession(id, startDate);
+        databaseManager.addUserPastSessions(Username, user.getPastSessions());
+        return trainingSession;
+    }
+
     public void newCollectiveSessionButtonClicked(View v) {
-        Toast.makeText(this, "New collective session", Toast.LENGTH_SHORT).show();
-
-        /* TODO: generate una nuova session ID e aggiornare il DB
-         *    lanciare la attività dell'allenatore */
-
+        TrainingSession trainingSession = startTrainingSession();
+        /* TODO: lanciare la attività dell'allenatore */
     }
 
     public void newIndividualSessionButtonClicked(View v) {
-
+        TrainingSession trainingSession = startTrainingSession();
         Intent i = new Intent(this, SessionActivity.class);
         i.putExtra("username", Username);
-        /* TODO: generate una nuova session ID e aggiornare il DB
-         */
-        i.putExtra("sessionId", Username + "_2"); // CAMBIARE QUESTO VALORE HARD CODED
+        i.putExtra("trainingSession", trainingSession);
+        //i.putExtra("sessionId", Username + "_2"); // CAMBIARE QUESTO VALORE HARD CODED
         startActivity(i);
-
     }
 
     public void joinCollectiveSessionButtonClicked(View v) {
