@@ -82,9 +82,13 @@ public class DatabaseManager {
         mDatabase.child("users").child(username).updateChildren(sessions);
     }
 
-    public void writeTrainingSession(String id, TrainingSession trainingSession) {
+    public void writeTrainingSession(TrainingSession trainingSession) {
+        String trainer = trainingSession.getTrainer();
+        String id = trainingSession.getId();
         trainingSession.setTrainer(null);
         mDatabase.child("trainingSessions").child(id).setValue(trainingSession);
+        trainingSession.setTrainer(trainer);
+        trainingSession.setId(id);
     }
 
     public void writeUserSession(UserSession session) {

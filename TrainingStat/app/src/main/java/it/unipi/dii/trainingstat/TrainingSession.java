@@ -1,12 +1,14 @@
 package it.unipi.dii.trainingstat;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import it.unipi.dii.trainingstat.gui.UserSession;
 
-public class TrainingSession {
+public class TrainingSession implements Serializable {
+    private String id;
     private String trainer;
     private String status;
     private String startDate;
@@ -15,14 +17,17 @@ public class TrainingSession {
 
     public TrainingSession(){}
 
-    public TrainingSession(String trainer, String status, String startDate, String endDate,
+    public TrainingSession(String id, String trainer, String status, String startDate, String endDate,
                            List<Map<String, UserSession>> userSessions){
+        this.id = id;
         this.trainer = trainer;
         this.status = status;
         this.startDate = startDate;
         this.endDate = endDate;
         this.userSessions = userSessions;
     }
+
+    public String getId() { return id; }
 
     public String getTrainer() {
         return trainer;
@@ -47,6 +52,8 @@ public class TrainingSession {
         session.put(username, u);
         this.userSessions.add(session);
     }
+
+    public void setId(String id) { this.id = id; }
 
     public void setTrainer(String trainer) { this.trainer = trainer; }
 
