@@ -108,16 +108,15 @@ public class DatabaseManager {
         });
     }
 
-    // Da qui in poi vecchie funzioni di test da sistemare
-
-    public void writeUserSession(UserSession session) {
-        /*String userKey = mDatabase.child("sessions").push().getKey();
-        mDatabase.child(userKey).setValue(session);*/
-        DatabaseReference dbr = mDatabase;
-        String userKey = dbr.child("sessions").push().getKey();
-        dbr.child("Training_Data_"+session.getUsername()).setValue(session);
-        //dbr.child(userKey).setValue(session);
+    public void writeUserSession(String trainingSessionId, UserSession session) {
+        String username = session.getUsername();
+        session.setUsername(null);
+        mDatabase.child("trainingSessions").child(trainingSessionId).child("userSessions")
+                .child(username).setValue(session);
+        session.setUsername(username);
     }
+
+    // Da qui in poi vecchie funzioni di test da sistemare
 
     public void readData(TrainingSession t, MainActivity m) {
 
