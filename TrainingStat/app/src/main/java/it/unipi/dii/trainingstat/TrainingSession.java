@@ -2,7 +2,6 @@ package it.unipi.dii.trainingstat;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import it.unipi.dii.trainingstat.gui.UserSession;
@@ -13,18 +12,17 @@ public class TrainingSession implements Serializable {
     private String status;
     private String startDate;
     private String endDate;
-    private List<Map<String, UserSession>> userSessions;
+    private Map<String, UserSession> userSessions;
 
     public TrainingSession(){}
 
-    public TrainingSession(String id, String trainer, String status, String startDate, String endDate,
-                           List<Map<String, UserSession>> userSessions){
+    public TrainingSession(String id, String trainer, String status, String startDate, String endDate){
         this.id = id;
         this.trainer = trainer;
         this.status = status;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.userSessions = userSessions;
+        this.userSessions = new HashMap<>();
     }
 
     public String getId() { return id; }
@@ -41,16 +39,15 @@ public class TrainingSession implements Serializable {
 
     public String getEndDate() { return endDate; }
 
-    public List<Map<String, UserSession>> getSessions() {
+    public Map<String, UserSession> getSessions() {
         return userSessions;
     }
 
     public void addSession(UserSession u) {
         String username = u.getUsername();
         u.setUsername(null);
-        Map<String, UserSession> session = new HashMap<>();
-        session.put(username, u);
-        this.userSessions.add(session);
+        this.userSessions.put(username, u);
+        u.setUsername(username);
     }
 
     public void setId(String id) { this.id = id; }
