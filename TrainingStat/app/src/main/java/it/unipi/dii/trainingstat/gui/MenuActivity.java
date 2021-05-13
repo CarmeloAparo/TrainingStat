@@ -3,6 +3,7 @@ package it.unipi.dii.trainingstat.gui;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,11 +16,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.function.Function;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
+import it.unipi.dii.trainingstat.entities.UserSession;
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -51,7 +54,7 @@ public class MenuActivity extends AppCompatActivity {
     public TrainingSession startTrainingSession() {
         user.setLastIncrementalID(user.getLastIncrementalID() + 1);
         String id = Username + "_" + user.getLastIncrementalID();
-        @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         Calendar calendar = Calendar.getInstance();
         String startDate = df.format(calendar.getTime());
         TrainingSession trainingSession = new TrainingSession(id, Username, "started", startDate, null);
@@ -73,30 +76,35 @@ public class MenuActivity extends AppCompatActivity {
         Intent i = new Intent(this, SessionActivity.class);
         i.putExtra("username", Username);
         i.putExtra("trainingSession", trainingSession);
-        //i.putExtra("sessionId", Username + "_2"); // CAMBIARE QUESTO VALORE HARD CODED
         startActivity(i);
     }
 
     public void joinCollectiveSessionButtonClicked(View v) {
-
         EditText sessionIdToJoinET = findViewById(R.id.menuInsertSessionIdET);
         String sessionIdToJoin = sessionIdToJoinET.getText().toString();
-
         // Don't even bother the DB with an empty session id
         if (sessionIdToJoin.equals("")) {
-
             Toast.makeText(this, "A session id must be provided", Toast.LENGTH_SHORT).show();
-
         } else {
-
-            /* TODO:
-             *   controllare che la sessione esista e che abbia status "started"
-             *   in caso di errore mostrare un toast informativo
-             *   altrimenti avviare la prossima attività
-             */
-
-            Toast.makeText(this, "A session id has been provided", Toast.LENGTH_SHORT).show();
+            DatabaseManager db = new DatabaseManager();
+            Function<TrainingSession, Void> function = this::joinSession;
+            db.getTrainingSession(sessionIdToJoin, function);
         }
+    }
+
+    public Void joinSession(TrainingSession trainingSession) {
+        if (trainingSession == null || !trainingSession.getStatus().equals("started")) {
+            Toast.makeText(this,
+                    "The session doesn't exists or it is ended. Please check the session id and try again!",
+                    Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Intent i = new Intent(this, SessionActivity.class);
+            i.putExtra("username", Username);
+            i.putExtra("trainingSession", trainingSession);
+            startActivity(i);
+        }
+        return null;
     }
 
     private View.OnClickListener pastSessionsButtonListener = new View.OnClickListener() {
