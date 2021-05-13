@@ -86,6 +86,7 @@ public class DatabaseManager {
         String trainer = trainingSession.getTrainer();
         String id = trainingSession.getId();
         trainingSession.setTrainer(null);
+        trainingSession.setId(null);
         mDatabase.child("trainingSessions").child(id).setValue(trainingSession);
         trainingSession.setTrainer(trainer);
         trainingSession.setId(id);
