@@ -119,11 +119,11 @@ public class DatabaseManager {
                         String r = (String) u.child("username").getValue();
 
 
-                        t.addSession(u.getValue(UserSession.class));
-                        Log.d("Test", "check_Size_list:" + t.getSessions().size());
+                        t.addUserSession(u.getValue(UserSession.class));
+                        Log.d("Test", "check_Size_list:" + t.getUserSessions().size());
 
                         // this is to check if when receiving X users data, you can start new activity in the app, and yes, you need to pass the main activity status
-                        if(t.getSessions().size() > 1) {
+                        if(t.getUserSessions().size() > 1) {
 
                             Intent i = new Intent(m, MenuActivity.class);
                             i.putExtra("username", "username");

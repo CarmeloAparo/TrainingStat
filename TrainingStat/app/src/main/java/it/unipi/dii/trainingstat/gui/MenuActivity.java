@@ -13,7 +13,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
@@ -55,8 +57,7 @@ public class MenuActivity extends AppCompatActivity {
         @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Calendar calendar = Calendar.getInstance();
         String startDate = df.format(calendar.getTime());
-        TrainingSession trainingSession = new TrainingSession(id, Username, "started", startDate,
-                null, null);
+        TrainingSession trainingSession = new TrainingSession(id, Username, "started", startDate, null);
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.writeTrainingSession(trainingSession);
         databaseManager.updateUserIncrementalID(Username, user.getLastIncrementalID());

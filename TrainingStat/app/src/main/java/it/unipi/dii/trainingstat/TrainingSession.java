@@ -39,11 +39,11 @@ public class TrainingSession implements Serializable {
 
     public String getEndDate() { return endDate; }
 
-    public Map<String, UserSession> getSessions() {
+    public Map<String, UserSession> getUserSessions() {
         return userSessions;
     }
 
-    public void addSession(UserSession u) {
+    public void addUserSession(UserSession u) {
         String username = u.getUsername();
         u.setUsername(null);
         this.userSessions.put(username, u);
