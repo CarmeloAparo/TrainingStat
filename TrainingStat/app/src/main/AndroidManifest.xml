@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TrainingStat">
         <activity android:name=".gui.SessionActivity"/>
-        <activity android:name=".gui.MenuActivity" />
+        <activity android:name=".gui.MenuActivity" android:windowSoftInputMode="adjustPan" />
         <activity android:name=".gui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
