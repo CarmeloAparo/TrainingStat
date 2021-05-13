@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -24,7 +25,7 @@ import it.unipi.dii.trainingstat.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.entities.UserSession;
 
-public class MenuActivity extends AppCompatActivity {
+public class MenuActivity extends AppCompatActivity implements View.OnClickListener {
 
     private String Username;
     private User user;
@@ -44,7 +45,7 @@ public class MenuActivity extends AppCompatActivity {
             Button button = new Button(this);
             button.setText(session.get("startDate"));
             button.setId(id);
-            button.setOnClickListener(pastSessionsButtonListener);
+            button.setOnClickListener(this);
             LinearLayout linearLayout = findViewById(R.id.pastSessionsLayout);
             linearLayout.addView(button);
             id++;
@@ -99,6 +100,10 @@ public class MenuActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
         }
         else {
+            UserSession session = new UserSession();
+            session.setUsername(Username);
+            DatabaseManager databaseManager = new DatabaseManager();
+            databaseManager.writeUserSession(trainingSession.getId(), session);
             Intent i = new Intent(this, SessionActivity.class);
             i.putExtra("username", Username);
             i.putExtra("trainingSession", trainingSession);
@@ -107,14 +112,29 @@ public class MenuActivity extends AppCompatActivity {
         return null;
     }
 
-    private View.OnClickListener pastSessionsButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            /*TODO:
-            *   Sulla base di quale bottone è stato cliccato prelevare i dati della sessione dal DB
-            *   ed avviare l'activity che mostra i risultati
-            * */
-        }
-    };
+    @Override
+    public void onClick(View v) {
+        int buttonId = v.getId();
+        Map<String, String> pastSession = user.getPastSessions().get(buttonId);
+        String sessionId = pastSession.get("id");
+        DatabaseManager db = new DatabaseManager();
+        Function<TrainingSession, Void> function = this::showPastSession;
+        db.getTrainingSession(sessionId, function);
+    }
 
+    private Void showPastSession(TrainingSession trainingSession) {
+        if (trainingSession == null) {
+            Toast.makeText(this, "An error occurred during past session selection",
+                    Toast.LENGTH_SHORT).show();
+        }
+        else {
+            /*TODO:
+            *  Avviare l'activity dei risultati invece che la session activity*/
+            Intent i = new Intent(this, SessionActivity.class);
+            i.putExtra("username", Username);
+            i.putExtra("trainingSession", trainingSession);
+            startActivity(i);
+        }
+        return null;
+    }
 }
