@@ -17,6 +17,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.gui.MainActivity;
@@ -25,8 +26,6 @@ import it.unipi.dii.trainingstat.entities.UserSession;
 
 public class DatabaseManager {
     private DatabaseReference mDatabase;
-    private String idTrainingSession;
-
 
 
     public DatabaseManager() {
@@ -36,13 +35,7 @@ public class DatabaseManager {
 
     }
 
-    // RIFARE COME UPDATE PER ID PAST SESSION DA AGGIORNARE
-    /*public void writeUser(User user) {
-        mDatabase.child("users").child(user.getUsername()).setValue(user);
-    }*/
-
-
-    public void getUser(String username, MainActivity m){
+    public void getUser(String username, Function<User, Void> function){
         mDatabase.child("users").child(username).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
@@ -56,10 +49,10 @@ public class DatabaseManager {
                         u = new User();
                         mDatabase.child("users").child(username).setValue(u);
                     } else {
-                        u = new User(d.getValue(User.class));
+                        u = d.getValue(User.class);
                     }
                     u.setUsername(username);
-                    m.changeActivity(u);
+                    function.apply(u);
                 }
             }
         });
@@ -86,6 +79,8 @@ public class DatabaseManager {
         trainingSession.setTrainer(trainer);
         trainingSession.setId(id);
     }
+
+    // Da qui in poi vecchie funzioni di test da sistemare
 
     public void writeUserSession(UserSession session) {
         /*String userKey = mDatabase.child("sessions").push().getKey();
