@@ -7,6 +7,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -17,18 +18,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-<<<<<<< Updated upstream:TrainingStat/app/src/main/java/it/unipi/dii/trainingstat/gui/SessionActivity.java
 import it.unipi.dii.trainingstat.R;
 
-public class SessionActivity extends AppCompatActivity {
-=======
 import java.util.ArrayList;
 import java.util.List;
->>>>>>> Stashed changes:TrainingStat/app/src/main/java/it/unipi/dii/trainingstat/SessionActivity.java
+
 
 public class SessionActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -144,7 +143,7 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor == stepSensor && chronoRunning) {
-            stepCount = (int) event.values[0];
+            stepCount += (int) event.values[0];
             TextView stepCounterTV = (TextView) findViewById(R.id.sessionStepCounterTV);
             stepCounterTV.setText(String.valueOf(stepCount));
         }
@@ -171,12 +170,15 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
 
     // GESTIONE PERMESSI
-
     private void requestPermissions() {
         List<String> permissionsToRequest = new ArrayList<>();
 
         if (!hasActivityRecognitionPermission()) {
-            permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
+            }else{
+                permissionsToRequest.add("com.google.android.gms.permission.ACTIVITY_RECOGNITION");
+            }
         }
 
         if (!permissionsToRequest.isEmpty()) {
@@ -185,7 +187,6 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
                     ACTIVITY_PERMISSION_CODE);
         }
     }
-
 
     private boolean hasActivityRecognitionPermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
