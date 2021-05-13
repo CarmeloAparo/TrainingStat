@@ -2,7 +2,6 @@ package it.unipi.dii.trainingstat;
 
 
 import android.content.Intent;
-import android.provider.ContactsContract;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -14,19 +13,15 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.gui.MainActivity;
 import it.unipi.dii.trainingstat.gui.MenuActivity;
-import it.unipi.dii.trainingstat.gui.UserSession;
+import it.unipi.dii.trainingstat.entities.UserSession;
 
 public class DatabaseManager {
     private DatabaseReference mDatabase;

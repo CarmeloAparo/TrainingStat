@@ -1,4 +1,4 @@
-package it.unipi.dii.trainingstat.gui;
+package it.unipi.dii.trainingstat.entities;
 
 import java.util.List;
 

@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import it.unipi.dii.trainingstat.gui.UserSession;
+import it.unipi.dii.trainingstat.entities.UserSession;
 
 public class TrainingSession implements Serializable {
     private String id;

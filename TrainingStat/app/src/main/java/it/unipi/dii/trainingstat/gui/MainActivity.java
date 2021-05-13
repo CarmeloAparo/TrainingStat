@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
-import it.unipi.dii.trainingstat.User;
+import it.unipi.dii.trainingstat.entities.User;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {

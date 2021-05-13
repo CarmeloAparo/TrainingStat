@@ -1,4 +1,4 @@
-package it.unipi.dii.trainingstat;
+package it.unipi.dii.trainingstat.entities;
 
 import java.io.Serializable;
 import java.util.ArrayList;

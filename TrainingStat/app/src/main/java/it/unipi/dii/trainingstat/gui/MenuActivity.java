@@ -13,16 +13,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Map;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
-import it.unipi.dii.trainingstat.SessionActivity;
 import it.unipi.dii.trainingstat.TrainingSession;
-import it.unipi.dii.trainingstat.User;
+import it.unipi.dii.trainingstat.entities.User;
 
 public class MenuActivity extends AppCompatActivity {
 
