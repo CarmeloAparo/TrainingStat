@@ -80,6 +80,34 @@ public class DatabaseManager {
         trainingSession.setId(id);
     }
 
+    public void getTrainingSession(String id, Function<TrainingSession, Void> function){
+        mDatabase.child("trainingSessions").child(id).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if (!task.isSuccessful()) {
+                    Log.e("Test", "Error on task", task.getException());
+                }
+                else {
+                    DataSnapshot d = task.getResult();
+                    TrainingSession trainingSession = d.getValue(TrainingSession.class);
+                    if(trainingSession != null) {
+                        trainingSession.setId(id);
+                        String trainer = id.substring(0, id.lastIndexOf("_"));
+                        trainingSession.setTrainer(trainer);
+                        // Set the username of the user sessions
+                        Map<String, UserSession> userSessions = trainingSession.getUserSessions();
+                        if (userSessions != null) {
+                            for (Map.Entry<String, UserSession> entry : userSessions.entrySet()) {
+                                entry.getValue().setUsername(entry.getKey());
+                            }
+                        }
+                    }
+                    function.apply(trainingSession);
+                }
+            }
+        });
+    }
+
     // Da qui in poi vecchie funzioni di test da sistemare
 
     public void writeUserSession(UserSession session) {

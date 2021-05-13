@@ -1,8 +1,9 @@
 package it.unipi.dii.trainingstat.entities;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class UserSession {
+public class UserSession implements Serializable {
     private String username;
     private int totSteps;
     private List<List<Double>> heatmap;
