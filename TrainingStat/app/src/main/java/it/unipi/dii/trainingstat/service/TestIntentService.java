@@ -35,6 +35,8 @@ public class TestIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
+        String a = intent.getType();
+        Log.i("INTENT TYPE", a);
         ArrayList < DetectedActivity > detectedActivities = (ArrayList) result.getProbableActivities();
         for (DetectedActivity activity: detectedActivities) {
             String act = convertToString(activity.getType());

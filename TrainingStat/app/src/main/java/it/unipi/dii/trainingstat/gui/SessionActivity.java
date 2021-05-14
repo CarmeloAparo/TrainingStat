@@ -22,6 +22,7 @@ import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.tasks.Task;
 
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.service.DummyService;
 import it.unipi.dii.trainingstat.service.TestIntentService;
 import it.unipi.dii.trainingstat.service.TrainingStatService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
@@ -74,7 +75,7 @@ public class SessionActivity extends AppCompatActivity implements IActivityCallB
             _trainingService = new TrainingStatService(this);
         } catch (NoStepCounterSensorAvailableException e) {
             Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
-            finish();
+            _trainingService = new DummyService();
         }
     }
 
@@ -124,6 +125,7 @@ public class SessionActivity extends AppCompatActivity implements IActivityCallB
 
 
     public void stopButtonClicked(View view) {
+
 
 
         /*
