@@ -2,14 +2,21 @@ package it.unipi.dii.trainingstat.service;
 
 import android.app.IntentService;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.ActivityTransition;
+import com.google.android.gms.location.ActivityTransitionEvent;
+import com.google.android.gms.location.ActivityTransitionRequest;
+import com.google.android.gms.location.ActivityTransitionResult;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
@@ -17,7 +24,7 @@ import java.util.List;
 
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForActivityRecognition;
 
-public class TestIntentService extends IntentService {
+public class TestIntentService extends BroadcastReceiver {
 
     final int PERIOD = 1000; //in ms
     List<ActivityTransition> transitions = new ArrayList<>();
@@ -25,39 +32,47 @@ public class TestIntentService extends IntentService {
     private ICallBackForActivityRecognition activity;
 
 
+
     public TestIntentService(ICallBackForActivityRecognition activity) {
-        this("TrainingIntentService", activity);
-
-    }
-
-    /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
-     *
-     * @param name Used to name the worker thread, important only for debugging.
-     */
-    public TestIntentService(String name, ICallBackForActivityRecognition activity) {
-        super(name);
 
         this.activity = activity;
         final int PERIOD = 1000; //in ms
-        ActivityRecognitionClient mActivityRecognitionClient = new ActivityRecognitionClient(activity.getContext());
+
         Intent intent = new Intent(activity.getContext(), this.getClass());
         PendingIntent pi = PendingIntent.getService(activity.getContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(PERIOD, pi);
+        Task<Void> task = ActivityRecognition.getClient(activity.getContext()).requestActivityUpdates(PERIOD, pi);
+        task.addOnSuccessListener(
+                (OnSuccessListener) result -> {
+                    activity.notifyStill();
+                });
+        task.addOnFailureListener(
+                e -> Log.e("ERROR", e.getMessage()));
     }
 
+    // Handle the callback intent in your service...
     @Override
-    protected void onHandleIntent(Intent intent) {
+    public void onReceive(Context context, Intent intent) {
+
+        /*
+        if (ActivityTransitionResult.hasResult(intent)) {
+            ActivityTransitionResult result = ActivityTransitionResult.extractResult(intent);
+            for (ActivityTransitionEvent event : result.getTransitionEvents()) {
+                // Do something useful here...
+            }
+        }
+
+         */
+
         ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
         activity.notifyStill();
-        String a = intent.getType();
-        Log.i("INTENT TYPE", a);
-        ArrayList < DetectedActivity > detectedActivities = (ArrayList) result.getProbableActivities();
+        
+        ArrayList < DetectedActivity > detectedActivities = (ArrayList<DetectedActivity>) result.getProbableActivities();
         for (DetectedActivity activity: detectedActivities) {
             String act = convertToString(activity.getType());
             Log.i("AR", "Detected activity: <" + act + ">, " + activity.getConfidence());
         }
     }
+
 
     String convertToString(int a) {
         switch (a) {
