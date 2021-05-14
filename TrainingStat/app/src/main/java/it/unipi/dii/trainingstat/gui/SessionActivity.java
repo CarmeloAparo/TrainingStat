@@ -1,13 +1,9 @@
 package it.unipi.dii.trainingstat.gui;
 
-import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -18,29 +14,26 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.service.TrainingStatService;
+import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
+import it.unipi.dii.trainingstat.service.interfaces.IActivityCallBackForTrainingService;
+import it.unipi.dii.trainingstat.service.interfaces.ITrainingService;
 
-import java.util.ArrayList;
-import java.util.List;
 
+public class SessionActivity extends AppCompatActivity implements IActivityCallBackForTrainingService {
 
-public class SessionActivity extends AppCompatActivity implements SensorEventListener {
-
-    private int ACTIVITY_PERMISSION_CODE = 0;
+    private ITrainingService _trainingService;
     private final String TAG = "SessionActivity";
     private Chronometer chronometer;
     private long pauseOffset; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
 
     private TextView StatusTV;
-    private SensorManager sensorManager;
-    private Sensor stepSensor;
-    private int stepCount;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,22 +56,16 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
         chronometer = findViewById(R.id.sessionChronometer);
 
-        requestPermissions();
-
-        sensorSetup();
-    }
-
-
-    private void sensorSetup() {
-
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-        if (stepSensor == null) {
-            Toast.makeText(this, "Step sensor is not present", Toast.LENGTH_SHORT).show();
+        try {
+            _trainingService = new TrainingStatService(this);
+        } catch (NoStepCounterSensorAvailableException e) {
+            Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
             finish();
         }
-
     }
+
+
+
 
 
     // calls the right handler method depending on the state of the button
@@ -93,13 +80,13 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
     private void startButtonClicked(Button startPauseButton) {
 
-        StatusTV.setText("Monitoring");
+        StatusTV.setText(R.string.monitoring);
         startPauseButton.setText(R.string.pause_button_text);
 
         chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
         chronometer.start();
 
-        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_GAME);
+        _trainingService.registerSensors();
 
         //TODO fare partire il timer, inviare i dati al db
 
@@ -109,13 +96,13 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
     private void pauseButtonClicked(Button startPauseButton) {
 
-        StatusTV.setText("Paused");
+        StatusTV.setText(R.string.paused);
         startPauseButton.setText(R.string.start_button_text);
 
         chronometer.stop();
         pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
 
-        sensorManager.unregisterListener(this, stepSensor);
+        _trainingService.unregisterSensors();
 
         // TODO fermare il timer e il recupero dei vari dati
 
@@ -124,16 +111,6 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
     public void stopButtonClicked(View view) {
 
-        StatusTV.setText("Ready");
-
-        // ATTENZIONE QUESTA SAREBBE LA RESET QUINDI VA CAMBIATA
-        chronometer.setBase(SystemClock.elapsedRealtime());
-        pauseOffset = 0;
-
-        // reset del counter
-        stepCount = 0;
-        TextView stepCounterTV = (TextView) findViewById(R.id.sessionStepCounterTV);
-        stepCounterTV.setText(String.valueOf(stepCount));
 
         /*
         TODO bloccare il timer,
@@ -144,57 +121,23 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor == stepSensor) {
-            stepCount += (int) event.values[0];
-            TextView stepCounterTV = (TextView) findViewById(R.id.sessionStepCounterTV);
-            stepCounterTV.setText(String.valueOf(stepCount));
-        }
 
+    @Override
+    public Context getContext() {
+        return this;
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        Log.i(TAG, "Accuracy changed");
+    public void passStepCounter(int steps) {
+        TextView stepCounterTV = findViewById(R.id.sessionStepCounterTV);
+        stepCounterTV.setText(String.valueOf(steps));
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_GAME);
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        sensorManager.unregisterListener(this, stepSensor);
-    }
-
-
-    // GESTIONE PERMESSI
-    private void requestPermissions() {
-        List<String> permissionsToRequest = new ArrayList<>();
-
-        if (!hasActivityRecognitionPermission()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
-            }else{
-                permissionsToRequest.add("com.google.android.gms.permission.ACTIVITY_RECOGNITION");
-            }
-        }
-
-        if (!permissionsToRequest.isEmpty()) {
-            ActivityCompat.requestPermissions(this,
-                    permissionsToRequest.toArray(new String[0]),
-                    ACTIVITY_PERMISSION_CODE);
-        }
-    }
-
-    private boolean hasActivityRecognitionPermission() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
-                == PackageManager.PERMISSION_GRANTED;
+    public void askPermissions(String[] permissions, int permissionCode) {
+        ActivityCompat.requestPermissions(this,
+                permissions,
+                permissionCode);
     }
 
     @Override
@@ -205,7 +148,7 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == ACTIVITY_PERMISSION_CODE && grantResults.length != 0){
+        if (grantResults.length != 0 /*&& requestCode == 0*/){
             for (int i = 0; i< grantResults.length; i++){
                 if (grantResults[i] == PackageManager.PERMISSION_GRANTED){
                     Log.i("Permission request", permissions[i] + " granted");
@@ -214,8 +157,6 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
         }
 
     }
-
-
 }
 
 

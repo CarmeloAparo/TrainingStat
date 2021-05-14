@@ -10,7 +10,11 @@
     <string name="start_button_text">START</string>
     <string name="stop_button_text">STOP</string>
     <string name="pause_button_text">PAUSE</string>
+    <string name="monitoring">Monitoring</string>
+    <string name="ready">Ready</string>
+    <string name="paused">Paused</string>
     <string name="insert_session_id_placeholder">Pippo_2</string>
     <string name="status_text_view_default">Ready</string>
+    <string name="step_sensor_unavailable_toast">Step sensor not available</string>
 
 </resources>
