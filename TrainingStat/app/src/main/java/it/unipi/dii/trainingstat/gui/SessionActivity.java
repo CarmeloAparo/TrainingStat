@@ -99,6 +99,8 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
         chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
         chronometer.start();
 
+        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_GAME);
+
         //TODO fare partire il timer, inviare i dati al db
 
 
@@ -112,6 +114,8 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
         chronometer.stop();
         pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
+
+        sensorManager.unregisterListener(this, stepSensor);
 
         // TODO fermare il timer e il recupero dei vari dati
 
@@ -142,7 +146,7 @@ public class SessionActivity extends AppCompatActivity implements SensorEventLis
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor == stepSensor && chronoRunning) {
+        if (event.sensor == stepSensor) {
             stepCount += (int) event.values[0];
             TextView stepCounterTV = (TextView) findViewById(R.id.sessionStepCounterTV);
             stepCounterTV.setText(String.valueOf(stepCount));
