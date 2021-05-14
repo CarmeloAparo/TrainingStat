@@ -4,7 +4,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -26,11 +25,11 @@ import it.unipi.dii.trainingstat.service.DummyService;
 import it.unipi.dii.trainingstat.service.TestIntentService;
 import it.unipi.dii.trainingstat.service.TrainingStatService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
-import it.unipi.dii.trainingstat.service.interfaces.IActivityCallBackForTrainingService;
+import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
 import it.unipi.dii.trainingstat.service.interfaces.ITrainingService;
 
 
-public class SessionActivity extends AppCompatActivity implements IActivityCallBackForTrainingService {
+public class SessionActivity extends AppCompatActivity implements ICallBackForTrainingService {
 
     private ITrainingService _trainingService;
     private final String TAG = "SessionActivity";
@@ -62,14 +61,6 @@ public class SessionActivity extends AppCompatActivity implements IActivityCallB
 
         chronometer = findViewById(R.id.sessionChronometer);
 
-        // codice GoogleApi for Activity Recognition
-        // OnCreate() in MainActivity
-        final int PERIOD = 1000; //in ms
-        ActivityRecognitionClient mActivityRecognitionClient = new ActivityRecognitionClient(this);
-        Intent intent = new Intent(this, TestIntentService.class);
-        PendingIntent pi = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(PERIOD, pi);
-        // end
 
         try {
             _trainingService = new TrainingStatService(this);
@@ -172,6 +163,21 @@ public class SessionActivity extends AppCompatActivity implements IActivityCallB
             }
         }
 
+    }
+
+    @Override
+    public void notifyRunning() {
+        Toast.makeText(this, "RUNNING", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void notifyStill() {
+        Toast.makeText(this, "STILL", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void notifyWalking() {
+        Toast.makeText(this, "WALKING", Toast.LENGTH_SHORT).show();
     }
 }
 

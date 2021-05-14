@@ -16,19 +16,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
-import it.unipi.dii.trainingstat.service.interfaces.IActivityCallBackForTrainingService;
+import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
 import it.unipi.dii.trainingstat.service.interfaces.ITrainingService;
 
 
 public class TrainingStatService implements SensorEventListener, ITrainingService {
 
-    private final IActivityCallBackForTrainingService activity;
+    private final ICallBackForTrainingService activity;
     private int ACTIVITY_PERMISSION_CODE = 0;
     private SensorManager sensorManager;
     private Sensor stepSensor;
     private int stepCount;
 
-    public TrainingStatService(IActivityCallBackForTrainingService activity) throws NoStepCounterSensorAvailableException {
+    public TrainingStatService(ICallBackForTrainingService activity) throws NoStepCounterSensorAvailableException {
         this.activity = activity;
         //requestPermissions();
         sensorSetup();
