@@ -1,5 +1,6 @@
 package it.unipi.dii.trainingstat.gui;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,7 +18,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.tasks.Task;
+
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.service.TestIntentService;
 import it.unipi.dii.trainingstat.service.TrainingStatService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
 import it.unipi.dii.trainingstat.service.interfaces.IActivityCallBackForTrainingService;
@@ -55,6 +60,15 @@ public class SessionActivity extends AppCompatActivity implements IActivityCallB
         SessionIdTextView.setText(sessionId);
 
         chronometer = findViewById(R.id.sessionChronometer);
+
+        // codice GoogleApi for Activity Recognition
+        // OnCreate() in MainActivity
+        final int PERIOD = 1000; //in ms
+        ActivityRecognitionClient mActivityRecognitionClient = new ActivityRecognitionClient(this);
+        Intent intent = new Intent(this, TestIntentService.class);
+        PendingIntent pi = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(PERIOD, pi);
+        // end
 
         try {
             _trainingService = new TrainingStatService(this);
