@@ -11,9 +11,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TrainingStat">
-        <activity android:name=".gui.SessionActivity"/>
-        <activity android:name=".gui.MenuActivity" />
-        <activity android:name=".gui.MainActivity">
+        <activity
+            android:name=".gui.SessionActivity"
+            android:screenOrientation="sensorPortrait"
+            android:configChanges="orientation"/>
+        <activity
+            android:name=".gui.MenuActivity"
+            android:screenOrientation="sensorPortrait"
+            android:configChanges="orientation"/>
+        <activity
+            android:name=".gui.MainActivity"
+            android:screenOrientation="sensorPortrait"
+            android:configChanges="orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
