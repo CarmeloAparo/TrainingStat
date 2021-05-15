@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public Void changeActivity(User u){
-        Intent i = new Intent(this, MenuActivity.class);
+        Intent i = new Intent(this, BLETestActivity.class);
         i.putExtra("User", u);
         startActivity(i);
         return null;
