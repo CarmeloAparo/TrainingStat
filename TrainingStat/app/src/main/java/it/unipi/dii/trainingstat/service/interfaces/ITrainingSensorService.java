@@ -1,6 +1,6 @@
 package it.unipi.dii.trainingstat.service.interfaces;
 
-public interface ITrainingService {
+public interface ITrainingSensorService {
     void unregisterSensors();
     void registerSensors();
 }

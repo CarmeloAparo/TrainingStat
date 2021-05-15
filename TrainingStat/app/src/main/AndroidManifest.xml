@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".service.TestIntentService" />
+        <service android:name=".service.TrainingStatIntentService" />
     </application>
 
 </manifest>

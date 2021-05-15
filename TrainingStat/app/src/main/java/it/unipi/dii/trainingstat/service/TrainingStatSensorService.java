@@ -17,10 +17,10 @@ import java.util.List;
 
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
-import it.unipi.dii.trainingstat.service.interfaces.ITrainingService;
+import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 
 
-public class TrainingStatService implements SensorEventListener, ITrainingService {
+public class TrainingStatSensorService implements SensorEventListener, ITrainingSensorService {
 
     private final ICallBackForTrainingService activity;
     private int ACTIVITY_PERMISSION_CODE = 0;
@@ -28,7 +28,7 @@ public class TrainingStatService implements SensorEventListener, ITrainingServic
     private Sensor stepSensor;
     private int stepCount;
 
-    public TrainingStatService(ICallBackForTrainingService activity) throws NoStepCounterSensorAvailableException {
+    public TrainingStatSensorService(ICallBackForTrainingService activity) throws NoStepCounterSensorAvailableException {
         this.activity = activity;
         //requestPermissions();
         sensorSetup();
@@ -58,27 +58,6 @@ public class TrainingStatService implements SensorEventListener, ITrainingServic
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         Log.i("DEBUG", String.format("Accuracy changed to <%d>", accuracy));
-    }
-
-    // GESTIONE PERMESSI
-    private void requestPermissions() {
-        List<String> permissionsToRequest = new ArrayList<>();
-
-        if (!hasActivityRecognitionPermission()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
-            }else{
-                permissionsToRequest.add("com.google.android.gms.permission.ACTIVITY_RECOGNITION");
-            }
-        }
-
-        if (!permissionsToRequest.isEmpty()) {
-            activity.askPermissions(permissionsToRequest.toArray(new String[0]), ACTIVITY_PERMISSION_CODE);
-        }
-    }
-
-    private boolean hasActivityRecognitionPermission() {
-        return ContextCompat.checkSelfPermission(activity.getContext(), Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override

@@ -1,9 +1,13 @@
 package it.unipi.dii.trainingstat.gui;
 
+import android.Manifest;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -16,28 +20,82 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.tasks.Task;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.service.DummyService;
-import it.unipi.dii.trainingstat.service.TestIntentService;
-import it.unipi.dii.trainingstat.service.TrainingStatService;
+import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
+import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
-import it.unipi.dii.trainingstat.service.interfaces.ITrainingService;
+import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 
 
 public class SessionActivity extends AppCompatActivity implements ICallBackForTrainingService {
 
-    private ITrainingService _trainingService;
+    private static final int ACTIVITY_PERMISSION_CODE = 0;
+    private ITrainingSensorService _trainingService;
     private final String TAG = "SessionActivity";
     private Chronometer chronometer;
     private long pauseOffset; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
 
     private TextView StatusTV;
+
+
+    private BroadcastReceiver _activityRecognitionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra("Status");
+            Log.d("SessionActivity", message);
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private void initializeActivityRecognition(){
+
+        requestActivityRecognitionPermissions();
+
+        if(!hasActivityRecognitionPermission()){
+            Toast.makeText(this, "Activity recognition permission are necessary to use the app", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
+        final  int  PERIOD  =  1000;  //in  ms
+        ActivityRecognitionClient mActivityRecognitionClient  =  new  ActivityRecognitionClient(this);
+        Intent  i  =  new  Intent(this,  TrainingStatIntentService.class);
+        PendingIntent pi  =  PendingIntent.getService(this,  1,  i,  PendingIntent.FLAG_UPDATE_CURRENT);
+        Task<Void> task  =  mActivityRecognitionClient.requestActivityUpdates(PERIOD,  pi);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(_activityRecognitionReceiver, new IntentFilter(TrainingStatIntentService.ACTIVITY_RECOGNITION));
+    }
+
+    private void requestActivityRecognitionPermissions() {
+        List<String> permissionsToRequest = new ArrayList<>();
+
+        if (!hasActivityRecognitionPermission()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
+            }else{
+                permissionsToRequest.add("com.google.android.gms.permission.ACTIVITY_RECOGNITION");
+            }
+        }
+
+        if (!permissionsToRequest.isEmpty()) {
+            this.askPermissions(permissionsToRequest.toArray(new String[0]), ACTIVITY_PERMISSION_CODE);
+        }
+    }
+
+    private boolean hasActivityRecognitionPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED;
+    }
 
 
     @Override
@@ -61,9 +119,10 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
 
         chronometer = findViewById(R.id.sessionChronometer);
 
+        initializeActivityRecognition();
 
         try {
-            _trainingService = new TrainingStatService(this);
+            _trainingService = new TrainingStatSensorService(this);
         } catch (NoStepCounterSensorAvailableException e) {
             Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
             _trainingService = new DummyService();
