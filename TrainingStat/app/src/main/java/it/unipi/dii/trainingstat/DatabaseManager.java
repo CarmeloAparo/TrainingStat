@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -26,13 +27,14 @@ import it.unipi.dii.trainingstat.entities.UserSession;
 
 public class DatabaseManager {
     private DatabaseReference mDatabase;
+    private ChildEventListener userSessionsListener;
 
 
     public DatabaseManager() {
         mDatabase = FirebaseDatabase
                 .getInstance("https://trainingstat-565d5-default-rtdb.europe-west1.firebasedatabase.app/")
                 .getReference();
-
+        userSessionsListener = null;
     }
 
     public void getUser(String username, Function<User, Void> function){
@@ -116,64 +118,55 @@ public class DatabaseManager {
         session.setUsername(username);
     }
 
-    // Da qui in poi vecchie funzioni di test da sistemare
-
-    public void readData(TrainingSession t, MainActivity m) {
-
-        ChildEventListener childEventListener = new ChildEventListener() {
+    public void listenUserSessions(String id, Function<UserSession, Void> function) {
+        if (userSessionsListener != null)
+            return;
+        userSessionsListener = new ChildEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d("Test", "onChildAdded:" + dataSnapshot.getKey());
-                // A new comment has been added, add it to the displayed list
-                UserSession comment = dataSnapshot.getValue(UserSession.class);
-
-                DataSnapshot u = dataSnapshot;
-                //for ( DataSnapshot u : dataSnapshot.getChildren()) {
-                    if (u == null) {
-                        Log.d("Test", "onChildAdded-Session: null");
-                    } else{
-                        Log.d("Test", "onChildAdded-Session:" + u.child("username"));
-                        String r = (String) u.child("username").getValue();
-
-
-                        t.addUserSession(u.getValue(UserSession.class));
-                        Log.d("Test", "check_Size_list:" + t.getUserSessions().size());
-
-                        // this is to check if when receiving X users data, you can start new activity in the app, and yes, you need to pass the main activity status
-                        if(t.getUserSessions().size() > 1) {
-
-                            Intent i = new Intent(m, MenuActivity.class);
-                            i.putExtra("username", "username");
-                            m.startActivity(i);
-                        }
-                    }
-                    // ...
-                //}
-            }
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d("Test", "onChildChanged:" + dataSnapshot.getKey());
-                // ...
+            public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChildName) {
+                String username = snapshot.getKey();
+                UserSession userSession = snapshot.getValue(UserSession.class);
+                if (userSession != null) {
+                    userSession.setUsername(username);
+                    function.apply(userSession);    // Add user button in trainer activity
+                }
             }
 
             @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Log.d("Test", "onChildDeleted:" + dataSnapshot.getKey());
+            public void onChildChanged(@NonNull DataSnapshot snapshot, String previousChildName) {
+                String username = snapshot.getKey();
+                UserSession userSession = snapshot.getValue(UserSession.class);
+                if (userSession != null) {
+                    userSession.setUsername(username);
+                    function.apply(userSession);    // Add user session to the training session
+                }
             }
 
             @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d("Test", "onChildMoved:" + dataSnapshot.getKey());
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                Log.d("DatabaseManager", "onChildDeleted: " + snapshot.getKey());
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d("Test", "onChildCancelled:");
+            public void onChildMoved(@NonNull DataSnapshot snapshot, String previousChildName) {
+                Log.d("DatabaseManager", "onChildMoved: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w("DatabaseManager", "postComments:onCancelled", error.toException());
             }
         };
-        DatabaseReference dbr = mDatabase.child("sessions");
-        dbr.addChildEventListener(childEventListener);
+        mDatabase.child("trainingSessions").child(id).child("userSessions")
+                .addChildEventListener(userSessionsListener);
+    }
 
+    public void removeUserSessionsListener(String id) {
+        if (userSessionsListener != null) {
+            mDatabase.child("trainingSessions").child(id).child("userSessions")
+                    .removeEventListener(userSessionsListener);
+            userSessionsListener = null;
+        }
     }
 }
 
@@ -207,22 +200,4 @@ DatabaseManager {
 	public listenStatus() { Crea listener sul campo "status" della training session. Quando il campo diventa "ended" calcola le statistiche e le inserisce sul DB }
 
 }
-
- * idTrainingSession {
- *   managerName
- *   status = terminated
- *   idUserSession1 {
- *       username
- *       totSteps
- *       heatmap (int[][])
- *       stillPerc
- *       walkPerc
- *       runPerc
- *       maxSpeed
- *       meanSpeed
- *   }
- *   idUserSession2 {
- *       User 2 data
- *   }
- * }
  * */
