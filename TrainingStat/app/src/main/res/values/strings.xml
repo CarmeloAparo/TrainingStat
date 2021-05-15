@@ -12,5 +12,8 @@
     <string name="pause_button_text">PAUSE</string>
     <string name="insert_session_id_placeholder">Pippo_2</string>
     <string name="status_text_view_default">Ready</string>
+    <string name="trainerUsersTV">Players</string>
+    <string name="trainerStartButton">Start session</string>
+    <string name="trainerStopButton">Stop session</string>
 
 </resources>
