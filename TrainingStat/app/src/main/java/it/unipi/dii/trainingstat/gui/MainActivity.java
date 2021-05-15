@@ -35,9 +35,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         EditText UsernameInput = findViewById(R.id.mainUsernameET);
         String Username = UsernameInput.getText().toString();
 
-        DatabaseManager db = new DatabaseManager();
-        Function<User, Void> function = this::changeActivity;
-        db.getUser(Username, function);
+        if (Username.equals("")) {
+            Toast.makeText(this, "A username must be provided", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            DatabaseManager db = new DatabaseManager();
+            Function<User, Void> function = this::changeActivity;
+            db.getUser(Username, function);
+        }
     }
 
     public Void changeActivity(User u){
