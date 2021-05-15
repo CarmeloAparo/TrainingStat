@@ -23,14 +23,12 @@ import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 public class TrainingStatSensorService implements SensorEventListener, ITrainingSensorService {
 
     private final ICallBackForTrainingService activity;
-    private int ACTIVITY_PERMISSION_CODE = 0;
     private SensorManager sensorManager;
     private Sensor stepSensor;
     private int stepCount;
 
     public TrainingStatSensorService(ICallBackForTrainingService activity) throws NoStepCounterSensorAvailableException {
         this.activity = activity;
-        //requestPermissions();
         sensorSetup();
     }
 

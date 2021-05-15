@@ -55,7 +55,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra("Status");
             Log.d("SessionActivity", message);
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
         }
     };
 
