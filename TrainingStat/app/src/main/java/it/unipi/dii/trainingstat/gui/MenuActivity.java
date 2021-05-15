@@ -69,7 +69,10 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
 
     public void newCollectiveSessionButtonClicked(View v) {
         TrainingSession trainingSession = startTrainingSession();
-        /* TODO: lanciare la attività dell'allenatore */
+        Intent i = new Intent(this, TrainerActivity.class);
+        i.putExtra("User", user);
+        i.putExtra("TrainingSession", trainingSession);
+        startActivity(i);
     }
 
     public void newIndividualSessionButtonClicked(View v) {
