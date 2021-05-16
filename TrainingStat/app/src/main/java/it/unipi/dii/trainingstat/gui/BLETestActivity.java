@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import ca.hss.heatmaplib.HeatMap;
 import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.services.BeaconService;
 
@@ -16,6 +17,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.util.Random;
+
 public class BLETestActivity extends AppCompatActivity {
 
     @Override
@@ -23,6 +26,19 @@ public class BLETestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bletest);
         checkPermissions();
+
+        HeatMap heatMap = (HeatMap) findViewById(R.id.heatmap);
+        heatMap.setMinimum(0.0);
+        heatMap.setMaximum(100.0);
+        //add random data to the map
+        for (float x = (float) 0.125; x < 1; x += 0.25) {
+            for (float y = (float) 0.125; y < 1; y += 0.25) {
+                HeatMap.DataPoint point = new HeatMap.DataPoint(x, y, x * 100.0);
+                heatMap.addData(point);
+            }
+        }
+        //set the radius to 300 pixels.
+        heatMap.setRadius(300);
     }
 
     private void checkPermissions() {

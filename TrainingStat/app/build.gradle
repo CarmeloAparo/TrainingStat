@@ -48,4 +48,5 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation 'com.google.firebase:firebase-database'
     compile 'com.kontaktio:sdk:5.0.2'
+    implementation 'ca.heartlandsoftware:androidheatmap:1.2.0'
 }
