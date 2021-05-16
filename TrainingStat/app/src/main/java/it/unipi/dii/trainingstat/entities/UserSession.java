@@ -61,4 +61,32 @@ public class UserSession implements Serializable {
     }
 
     public void setUsername(String username) { this.username = username; }
+
+    public void setTotSteps(int totSteps) {
+        this.totSteps = totSteps;
+    }
+
+    public void setHeatmap(List<List<Double>> heatmap) {
+        this.heatmap = heatmap;
+    }
+
+    public void setStillPerc(double stillPerc) {
+        this.stillPerc = stillPerc;
+    }
+
+    public void setWalkPerc(double walkPerc) {
+        this.walkPerc = walkPerc;
+    }
+
+    public void setRunPerc(double runPerc) {
+        this.runPerc = runPerc;
+    }
+
+    public void setMaxSpeed(double maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+
+    public void setMeanSpeed(double meanSpeed) {
+        this.meanSpeed = meanSpeed;
+    }
 }
