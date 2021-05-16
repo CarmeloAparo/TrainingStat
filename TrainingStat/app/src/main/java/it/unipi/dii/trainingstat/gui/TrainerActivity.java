@@ -20,6 +20,7 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 public class TrainerActivity extends AppCompatActivity implements View.OnClickListener {
@@ -42,7 +43,7 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         Button startStopButton = findViewById(R.id.trainerStartStopButton);
         startStopButton.setText(R.string.trainerStartButton);
         databaseManager = new DatabaseManager();
-        databaseManager.listenUserSessions(trainingSession.getId(), this::addUserButton);
+        databaseManager.listenUserSessionsAdded(trainingSession.getId(), this::addUserButton);
         numPlayers = 0;
     }
 
@@ -64,8 +65,7 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
             String endDate = df.format(calendar.getTime());
             trainingSession.setEndDate(endDate);
             databaseManager.updateTrainingEndDate(trainingSession.getId(), endDate);
-            Function<UserSession, Void> addUserSession = this::addUserSession;
-            databaseManager.listenUserSessions(trainingSession.getId(), this::addUserSession);
+            databaseManager.listenUserSessionsChanged(trainingSession.getId(), this::addUserSession);
             databaseManager.setEndedStatus(trainingSession.getId());
             trainingSession.setEndedStatus();
         }
@@ -96,13 +96,42 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
     private UserSession computeAggregateresults() {
         UserSession aggregateResults = new UserSession();
         aggregateResults.setUsername(user.getUsername());
-        // Calcolo
+        int totSteps = 0;
+        double stillPerc = 0;
+        double walkPerc = 0;
+        double runPerc = 0;
+        double maxSpeed = 0;
+        double meanSpeed = 0;
+        for (Map.Entry<String, UserSession> entry : trainingSession.getUserSessions().entrySet()) {
+            UserSession userSession = entry.getValue();
+            totSteps += userSession.getTotSteps();
+            stillPerc += userSession.getStillPerc();
+            walkPerc += userSession.getWalkPerc();
+            runPerc += userSession.getRunPerc();
+            maxSpeed = Double.max(maxSpeed, userSession.getMaxSpeed());
+            meanSpeed += userSession.getMeanSpeed();
+        }
+        aggregateResults.setTotSteps(totSteps / numPlayers);
+        aggregateResults.setStillPerc(stillPerc / numPlayers);
+        aggregateResults.setWalkPerc(walkPerc / numPlayers);
+        aggregateResults.setRunPerc(runPerc / numPlayers);
+        aggregateResults.setMaxSpeed(maxSpeed);
+        aggregateResults.setMeanSpeed(meanSpeed / numPlayers);
         return aggregateResults;
     }
 
     @Override
     public void onClick(View v) {
         Button button = (Button) v;
-        Log.d("Test", button.getText().toString());
+        Map<String, UserSession> userSessions = trainingSession.getUserSessions();
+        UserSession userSession = userSessions.get(button.getText().toString());
+        if (userSession == null) {
+            Log.d("Test", "User session not arrived");
+            return;
+        }
+        /*
+        * TODO: Avviare l'activity dei risultati passando o la user session o tutta la training session
+        * */
+        Log.d("Test", "User session arrived");
     }
 }
