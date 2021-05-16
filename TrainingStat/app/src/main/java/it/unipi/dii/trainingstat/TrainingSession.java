@@ -54,7 +54,9 @@ public class TrainingSession implements Serializable {
 
     public void setTrainer(String trainer) { this.trainer = trainer; }
 
-    public void setStatus(String status) { this.status = status; }
+    public void setStartedStatus() { this.status = "started"; }
+
+    public void setEndedStatus() { this.status = "ended"; }
 
     public void setStartDate(String startDate) { this.startDate = startDate; }
 

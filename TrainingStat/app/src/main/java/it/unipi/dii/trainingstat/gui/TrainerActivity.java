@@ -17,6 +17,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 import java.util.function.Function;
 
@@ -24,6 +26,7 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
     private User user;
     private TrainingSession trainingSession;
     private DatabaseManager databaseManager;
+    private int numPlayers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,14 +42,33 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         Button startStopButton = findViewById(R.id.trainerStartStopButton);
         startStopButton.setText(R.string.trainerStartButton);
         databaseManager = new DatabaseManager();
-        Function<UserSession, Void> addUserButton = this::addUserButton;
-        databaseManager.listenUserSessions(trainingSession.getId(), addUserButton);
+        databaseManager.listenUserSessions(trainingSession.getId(), this::addUserButton);
+        numPlayers = 0;
     }
 
     public void startStopButtonClicked(View view) {
-        Log.d("Test", "StartStopButtonClicked");
-        UserSession userSession = new UserSession("topolino", 10, null, 1, 1, 1, 1, 1);
-        databaseManager.writeUserSession(trainingSession.getId(), userSession);
+        Button button = (Button) view;
+        if (button.getText().toString().equals(this.getResources().getString(R.string.trainerStartButton))) {
+            databaseManager.removeUserSessionsListener(trainingSession.getId());
+            button.setText(R.string.trainerStopButton);
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+            Calendar calendar = Calendar.getInstance();
+            String startDate = df.format(calendar.getTime());
+            trainingSession.setStartDate(startDate);
+            databaseManager.updateTrainingStartDate(trainingSession.getId(), startDate);
+        }
+        else if(button.getText().toString().equals(this.getResources().getString(R.string.trainerStopButton))) {
+            button.setText(R.string.trainerStoppedButton);
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+            Calendar calendar = Calendar.getInstance();
+            String endDate = df.format(calendar.getTime());
+            trainingSession.setEndDate(endDate);
+            databaseManager.updateTrainingEndDate(trainingSession.getId(), endDate);
+            Function<UserSession, Void> addUserSession = this::addUserSession;
+            databaseManager.listenUserSessions(trainingSession.getId(), this::addUserSession);
+            databaseManager.setEndedStatus(trainingSession.getId());
+            trainingSession.setEndedStatus();
+        }
     }
 
     public Void addUserButton(UserSession userSession) {
@@ -55,12 +77,27 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         button.setOnClickListener(this);
         LinearLayout linearLayout = findViewById(R.id.trainerUsersLinearLayout);
         linearLayout.addView(button);
+        numPlayers++;
         return null;
     }
 
     public Void addUserSession(UserSession userSession) {
-        Log.d("Test", "AddUserSession");
+        trainingSession.addUserSession(userSession);
+        if (trainingSession.getUserSessions().keySet().size() == numPlayers) {
+            databaseManager.removeUserSessionsListener(trainingSession.getId());
+            user.addPastSession(trainingSession.getId(), trainingSession.getStartDate());
+            databaseManager.addUserPastSessions(user.getUsername(), user.getPastSessions());
+            UserSession aggregateResults = computeAggregateresults();
+            databaseManager.writeUserSession(trainingSession.getId(), aggregateResults);
+        }
         return null;
+    }
+
+    private UserSession computeAggregateresults() {
+        UserSession aggregateResults = new UserSession();
+        aggregateResults.setUsername(user.getUsername());
+        // Calcolo
+        return aggregateResults;
     }
 
     @Override

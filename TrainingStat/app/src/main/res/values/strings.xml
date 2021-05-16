@@ -15,5 +15,6 @@
     <string name="trainerUsersTV">Players</string>
     <string name="trainerStartButton">Start session</string>
     <string name="trainerStopButton">Stop session</string>
+    <string name="trainerStoppedButton">Session concluded</string>
 
 </resources>
