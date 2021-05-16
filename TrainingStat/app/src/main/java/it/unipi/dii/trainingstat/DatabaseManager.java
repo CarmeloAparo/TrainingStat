@@ -168,6 +168,32 @@ public class DatabaseManager {
             userSessionsListener = null;
         }
     }
+
+    public void setStartedStatus(String trainingId) {
+        updateTrainingStatus(trainingId, "started");
+    }
+
+    public void setEndedStatus(String trainingId) {
+        updateTrainingStatus(trainingId, "ended");
+    }
+
+    private void updateTrainingStatus(String trainingId, String status) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", status);
+        mDatabase.child("trainingSessions").child(trainingId).updateChildren(updates);
+    }
+
+    public void updateTrainingStartDate(String trainingId, String date) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("startDate", date);
+        mDatabase.child("trainingSessions").child(trainingId).updateChildren(updates);
+    }
+
+    public void updateTrainingEndDate(String trainingId, String date) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("endDate", date);
+        mDatabase.child("trainingSessions").child(trainingId).updateChildren(updates);
+    }
 }
 
 /*
