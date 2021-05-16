@@ -118,7 +118,7 @@ public class DatabaseManager {
         session.setUsername(username);
     }
 
-    public void listenUserSessions(String id, Function<UserSession, Void> function) {
+    public void listenUserSessionsAdded(String id, Function<UserSession, Void> function) {
         if (userSessionsListener != null)
             return;
         userSessionsListener = new ChildEventListener() {
@@ -134,11 +134,44 @@ public class DatabaseManager {
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, String previousChildName) {
+                Log.d("DatabaseManager", "onChildChanged: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                Log.d("DatabaseManager", "onChildDeleted: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, String previousChildName) {
+                Log.d("DatabaseManager", "onChildMoved: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w("DatabaseManager", "postComments:onCancelled", error.toException());
+            }
+        };
+        mDatabase.child("trainingSessions").child(id).child("userSessions")
+                .addChildEventListener(userSessionsListener);
+    }
+
+    public void listenUserSessionsChanged(String id, Function<UserSession, Void> function) {
+        if (userSessionsListener != null)
+            return;
+        userSessionsListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChildName) {
+                Log.d("DatabaseManager", "onChildAdded: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, String previousChildName) {
                 String username = snapshot.getKey();
                 UserSession userSession = snapshot.getValue(UserSession.class);
                 if (userSession != null) {
                     userSession.setUsername(username);
-                    function.apply(userSession);    // Add user session to the training session
+                    function.apply(userSession);    // Add user button in trainer activity
                 }
             }
 
