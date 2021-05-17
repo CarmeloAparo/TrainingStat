@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
@@ -47,16 +48,37 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
     private long pauseOffset; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
 
+    // tiene traccia del numero di millisecondi passati in ogni attività
+    private long[] msPerActivity;
+
+    // serve per calcolare la durata di ogni tipo di attività
+    private long lastActivityTimeStamp;
+
     private TextView StatusTV;
 
-
     private BroadcastReceiver _activityRecognitionReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
+            @Override
+            public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra("Status");
+            int type = intent.getIntExtra("ActivityType", DetectedActivity.UNKNOWN);
+
             Log.d("SessionActivity", message);
             Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+
+            int activityIndex = getActivityIndex(type);
+
+            if (chronoRunning) { // mi interessano solo le attività registrate in monitori
+
+                // calcolo finestra attività e aggiorno
+                long activityDuration = SystemClock.elapsedRealtime() - lastActivityTimeStamp;
+                msPerActivity[activityIndex] += activityDuration;
+
+                lastActivityTimeStamp = SystemClock.elapsedRealtime();
+
+            }
+
         }
+
     };
 
     private void initializeActivityRecognition(){
@@ -119,6 +141,8 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
 
         chronometer = findViewById(R.id.sessionChronometer);
 
+        msPerActivity = new long[4];
+
         initializeActivityRecognition();
 
         try {
@@ -128,9 +152,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
             _trainingService = new DummyService();
         }
     }
-
-
-
 
 
     // calls the right handler method depending on the state of the button
@@ -145,45 +166,67 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
 
     private void startButtonClicked(Button startPauseButton) {
 
+        // aggiorno TV
         StatusTV.setText(R.string.monitoring);
         startPauseButton.setText(R.string.pause_button_text);
 
+        // faccio partire o ripartire il cronometro
         chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
         chronometer.start();
 
+        // registro il sensore degli step
         _trainingService.registerSensors();
 
-        //TODO fare partire il timer, inviare i dati al db
-
+        // questo long segna o il momento in cui è stato fatto (ri)partire il cronometro,
+        // o quando è stata registrata l'ultima attività
+        lastActivityTimeStamp = SystemClock.elapsedRealtime();
 
     }
 
 
     private void pauseButtonClicked(Button startPauseButton) {
 
+        // aggiorno TV
         StatusTV.setText(R.string.paused);
         startPauseButton.setText(R.string.start_button_text);
 
         chronometer.stop();
+
+        // contiene il tempo passato fino adesso
         pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
 
+        // scollego il sensore degli step
         _trainingService.unregisterSensors();
 
-        // TODO fermare il timer e il recupero dei vari dati
+        // tengo conto della mancata classificazione dell'attività quando clicco pause
+        int activityIndex = getActivityIndex(DetectedActivity.UNKNOWN);
+        long activityDuration = SystemClock.elapsedRealtime() - lastActivityTimeStamp;
+        msPerActivity[activityIndex] += activityDuration;
+        lastActivityTimeStamp = SystemClock.elapsedRealtime();
 
     }
 
 
     public void stopButtonClicked(View view) {
 
+        if(chronoRunning){
+            chronometer.stop();
+            // adesso conterrà tutti i ms passati nella sessione
+            pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
+            _trainingService.unregisterSensors();
+        }
 
+        double[] fractionActivity = new double[4];
 
-        /*
-        TODO bloccare il timer,
-          chiudere la sessione,
-          chiudere l'attività corrente,
-           passare all'attività di visualizzazione delle statistiche
-        */
+        for(int i = 0; i< fractionActivity.length; i++){
+            fractionActivity[i] = msPerActivity[i]/pauseOffset*100;
+        }
+
+        // DEBUG stampo i risultati a mano
+        Log.d("SessionActivity", "Still precentage: " + String.valueOf(fractionActivity[0]));
+        Log.d("SessionActivity", "Walking precentage: " + String.valueOf(fractionActivity[1]));
+        Log.d("SessionActivity", "Running precentage: " + String.valueOf(fractionActivity[2]));
+        Log.d("SessionActivity", "Unknown precentage: " + String.valueOf(fractionActivity[3]));
 
     }
 
@@ -238,6 +281,24 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
     public void notifyWalking() {
         Toast.makeText(this, "WALKING", Toast.LENGTH_SHORT).show();
     }
+
+    // funzione che traduce i codici delle attività nell'indice corretto del vettore timestamp
+    private int getActivityIndex(int a) {
+        switch (a) {
+            case DetectedActivity.STILL:
+                return 0;
+
+            case DetectedActivity.WALKING:
+                return 1;
+
+            case DetectedActivity.RUNNING:
+                return 2;
+
+            default:
+                return 3; // UNKNOWN + tutte le altre attività
+        }
+    }
+
 }
 
 

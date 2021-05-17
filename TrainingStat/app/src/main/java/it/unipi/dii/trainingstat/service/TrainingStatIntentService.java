@@ -21,20 +21,29 @@ public class TrainingStatIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-        ArrayList <DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
-        for (DetectedActivity activity: detectedActivities) {
-            String act = convertToString(activity.getType());
-            Log.d("TrainingStatIntentService", "Detected activity: <" + act + ">, " + activity.getConfidence());
+
+        if (ActivityRecognitionResult.hasResult(intent)) {
+
+            ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
+            ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
+
+            for (DetectedActivity activity : detectedActivities) {
+                String act = convertToString(activity.getType());
+                Log.d("TrainingStatIntentService", "Detected activity: <" + act + ">, " + activity.getConfidence());
+            }
+
+            int type = detectedActivities.get(0).getType();
+            sendMessageToActivity(convertToString(type), type);
+
         }
-        sendMessageToActivity(convertToString(detectedActivities.get(0).getType()));
     }
 
-    private void sendMessageToActivity(String activityStatus) {
+    private void sendMessageToActivity(String activityStatus, int activityType) {
         Intent intent = new Intent(ACTIVITY_RECOGNITION);
         intent.setAction(ACTIVITY_RECOGNITION);
         // You can also include some extra data.
         intent.putExtra("Status", activityStatus);
+        intent.putExtra("ActivityType", activityType);
 
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
