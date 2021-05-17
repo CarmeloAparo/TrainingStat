@@ -12,7 +12,11 @@ import com.google.android.gms.location.DetectedActivity;
 import java.util.ArrayList;
 
 public class TrainingStatIntentService extends IntentService {
-    public static final String ACTIVITY_RECOGNITION = "ActivityRecognition";
+    public static final String ACTIVITY_RECOGNITION_ID = "ActivityRecognition";
+    public static final String ACTIVITY_STILL = "still";
+    public static final String ACTIVITY_WALKING = "walking";
+    public static final String ACTIVITY_RUNNING = "running";
+    public static final String ACTIVITY_UNKNOWN = "unknown";
 
     public TrainingStatIntentService() {
         super("TrainingStatIntentService");
@@ -39,8 +43,8 @@ public class TrainingStatIntentService extends IntentService {
     }
 
     private void sendMessageToActivity(String activityStatus, int activityType) {
-        Intent intent = new Intent(ACTIVITY_RECOGNITION);
-        intent.setAction(ACTIVITY_RECOGNITION);
+        Intent intent = new Intent(ACTIVITY_RECOGNITION_ID);
+        intent.setAction(ACTIVITY_RECOGNITION_ID);
         // You can also include some extra data.
         intent.putExtra("Status", activityStatus);
         intent.putExtra("ActivityType", activityType);
@@ -58,18 +62,15 @@ public class TrainingStatIntentService extends IntentService {
             case DetectedActivity.ON_FOOT:
                 return "foot";
             case DetectedActivity.STILL:
-                return "still";
+                return ACTIVITY_STILL;
             case DetectedActivity.RUNNING:
-                return "running";
+                return ACTIVITY_RUNNING;
             case DetectedActivity.WALKING:
-                return "walking";
+                return ACTIVITY_WALKING;
             case DetectedActivity.TILTING:
                 return "tilting";
-            case DetectedActivity.UNKNOWN:
-                return "unknown";
-
-            default:
-                throw new IllegalStateException("Unexpected value: " + a);
+            default: //unknown
+                return ACTIVITY_UNKNOWN;
         }
     }
 

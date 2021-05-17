@@ -29,8 +29,10 @@ import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.service.ActivityTrackerService;
 import it.unipi.dii.trainingstat.service.DummyService;
 import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
 import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
@@ -42,44 +44,16 @@ import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 public class SessionActivity extends AppCompatActivity implements ICallBackForTrainingService {
 
     private static final int ACTIVITY_PERMISSION_CODE = 0;
+    private ActivityTrackerService _activityTrackerService;
     private ITrainingSensorService _trainingService;
     private final String TAG = "SessionActivity";
     private Chronometer chronometer;
     private long pauseOffset; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
 
-    // tiene traccia del numero di millisecondi passati in ogni attività
-    private long[] msPerActivity;
 
-    // serve per calcolare la durata di ogni tipo di attività
-    private long lastActivityTimeStamp;
 
     private TextView StatusTV;
-
-    private BroadcastReceiver _activityRecognitionReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra("Status");
-            int type = intent.getIntExtra("ActivityType", DetectedActivity.UNKNOWN);
-
-            Log.d("SessionActivity", message);
-            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
-
-            int activityIndex = getActivityIndex(type);
-
-            if (chronoRunning) { // mi interessano solo le attività registrate in monitori
-
-                // calcolo finestra attività e aggiorno
-                long activityDuration = SystemClock.elapsedRealtime() - lastActivityTimeStamp;
-                msPerActivity[activityIndex] += activityDuration;
-
-                lastActivityTimeStamp = SystemClock.elapsedRealtime();
-
-            }
-
-        }
-
-    };
 
     private void initializeActivityRecognition(){
 
@@ -95,8 +69,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
         Intent  i  =  new  Intent(this,  TrainingStatIntentService.class);
         PendingIntent pi  =  PendingIntent.getService(this,  1,  i,  PendingIntent.FLAG_UPDATE_CURRENT);
         Task<Void> task  =  mActivityRecognitionClient.requestActivityUpdates(PERIOD,  pi);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(_activityRecognitionReceiver, new IntentFilter(TrainingStatIntentService.ACTIVITY_RECOGNITION));
     }
 
     private void requestActivityRecognitionPermissions() {
@@ -141,9 +113,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
 
         chronometer = findViewById(R.id.sessionChronometer);
 
-        msPerActivity = new long[4];
 
         initializeActivityRecognition();
+        _activityTrackerService = new ActivityTrackerService();
 
         try {
             _trainingService = new TrainingStatSensorService(this);
@@ -177,10 +149,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
         // registro il sensore degli step
         _trainingService.registerSensors();
 
-        // questo long segna o il momento in cui è stato fatto (ri)partire il cronometro,
-        // o quando è stata registrata l'ultima attività
-        lastActivityTimeStamp = SystemClock.elapsedRealtime();
-
+        _activityTrackerService.startTacking();
     }
 
 
@@ -198,11 +167,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
         // scollego il sensore degli step
         _trainingService.unregisterSensors();
 
-        // tengo conto della mancata classificazione dell'attività quando clicco pause
-        int activityIndex = getActivityIndex(DetectedActivity.UNKNOWN);
-        long activityDuration = SystemClock.elapsedRealtime() - lastActivityTimeStamp;
-        msPerActivity[activityIndex] += activityDuration;
-        lastActivityTimeStamp = SystemClock.elapsedRealtime();
+        _activityTrackerService.stopTacking();
 
     }
 
@@ -214,19 +179,17 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
             // adesso conterrà tutti i ms passati nella sessione
             pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
             _trainingService.unregisterSensors();
+            // tengo conto della mancata classificazione dell'attività quando clicco pause
+            _activityTrackerService.stopTacking();
         }
 
-        double[] fractionActivity = new double[4];
-
-        for(int i = 0; i< fractionActivity.length; i++){
-            fractionActivity[i] = msPerActivity[i]/pauseOffset*100;
-        }
+        Map<String, Double> percentages = _activityTrackerService.getPercentages();
 
         // DEBUG stampo i risultati a mano
-        Log.d("SessionActivity", "Still precentage: " + String.valueOf(fractionActivity[0]));
+        /*Log.d("SessionActivity", "Still precentage: " + String.valueOf(fractionActivity[0]));
         Log.d("SessionActivity", "Walking precentage: " + String.valueOf(fractionActivity[1]));
         Log.d("SessionActivity", "Running precentage: " + String.valueOf(fractionActivity[2]));
-        Log.d("SessionActivity", "Unknown precentage: " + String.valueOf(fractionActivity[3]));
+        Log.d("SessionActivity", "Unknown precentage: " + String.valueOf(fractionActivity[3]));*/
 
     }
 
@@ -280,23 +243,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
     @Override
     public void notifyWalking() {
         Toast.makeText(this, "WALKING", Toast.LENGTH_SHORT).show();
-    }
-
-    // funzione che traduce i codici delle attività nell'indice corretto del vettore timestamp
-    private int getActivityIndex(int a) {
-        switch (a) {
-            case DetectedActivity.STILL:
-                return 0;
-
-            case DetectedActivity.WALKING:
-                return 1;
-
-            case DetectedActivity.RUNNING:
-                return 2;
-
-            default:
-                return 3; // UNKNOWN + tutte le altre attività
-        }
     }
 
 }
