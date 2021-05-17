@@ -29,16 +29,18 @@ public class TrainingStatIntentService extends IntentService {
         if (ActivityRecognitionResult.hasResult(intent)) {
 
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
+
             ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
 
-            for (DetectedActivity activity : detectedActivities) {
-                String act = convertToString(activity.getType());
-                Log.d("TrainingStatIntentService", "Detected activity: <" + act + ">, " + activity.getConfidence());
+            if (!detectedActivities.isEmpty()){
+                int type = detectedActivities.get(0).getType();
+                sendMessageToActivity(convertToString(type), type);
+
+                for (DetectedActivity activity : detectedActivities) {
+                    String act = convertToString(activity.getType());
+                    Log.d("TrainingStatIntentService", "Detected activity: <" + act + ">, " + activity.getConfidence());
+                }
             }
-
-            int type = detectedActivities.get(0).getType();
-            sendMessageToActivity(convertToString(type), type);
-
         }
     }
 

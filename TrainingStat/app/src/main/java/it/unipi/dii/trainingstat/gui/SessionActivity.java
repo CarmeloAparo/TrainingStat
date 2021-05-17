@@ -25,6 +25,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
@@ -46,14 +48,29 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
     private static final int ACTIVITY_PERMISSION_CODE = 0;
     private ActivityTrackerService _activityTrackerService;
     private ITrainingSensorService _trainingService;
-    private final String TAG = "SessionActivity";
+    private final String TAG = "[SessionActivity]";
     private Chronometer chronometer;
     private long pauseOffset; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
 
+    private ActivityRecognitionClient _activityRecognitionClient;
+    private PendingIntent _pendingIntent;
 
 
-    private TextView StatusTV;
+    private TextView _activityStatusTV;
+    private TextView _statusTV;
+
+    BroadcastReceiver _activityUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra("Status");
+
+            Log.d("[SessionActivity]", message);
+
+            _activityStatusTV.setText(message.toUpperCase());
+        }
+    };
+
 
     private void initializeActivityRecognition(){
 
@@ -64,12 +81,35 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
             finish();
         }
 
-        final  int  PERIOD  =  1000;  //in  ms
-        ActivityRecognitionClient mActivityRecognitionClient  =  new  ActivityRecognitionClient(this);
+
+        _activityRecognitionClient  =  new  ActivityRecognitionClient(this);
         Intent  i  =  new  Intent(this,  TrainingStatIntentService.class);
-        PendingIntent pi  =  PendingIntent.getService(this,  1,  i,  PendingIntent.FLAG_UPDATE_CURRENT);
-        Task<Void> task  =  mActivityRecognitionClient.requestActivityUpdates(PERIOD,  pi);
+        _pendingIntent  =  PendingIntent.getService(this,  1,  i,  PendingIntent.FLAG_UPDATE_CURRENT);
     }
+
+    private void startMonitoringActivityRecognition(int periodInMs){
+        Task<Void> task  =  _activityRecognitionClient.requestActivityUpdates(periodInMs,  _pendingIntent);
+
+        task.addOnSuccessListener(result -> Log.d(TAG, "Successfully requested activity updates"));
+        // Adds a listener that is called if the Task fails.
+        Task<Void> voidTask = task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, "Requesting activity updates failed to start");
+            }
+        });
+    }
+
+    private void stopMonitoringActivityRecognition(){
+        if(_activityRecognitionClient != null){
+            Task<Void> task = _activityRecognitionClient.removeActivityUpdates(_pendingIntent);
+            // Adds a listener that is called if the Task completes successfully.
+            task.addOnSuccessListener(result -> Log.d(TAG, "Removed activity updates successfully!"));
+            // Adds a listener that is called if the Task fails.
+            task.addOnFailureListener(e -> Log.e(TAG, "Failed to remove activity updates!"));
+        }
+    }
+
 
     private void requestActivityRecognitionPermissions() {
         List<String> permissionsToRequest = new ArrayList<>();
@@ -97,7 +137,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        StatusTV = findViewById(R.id.sessionStatusTV);
+        _statusTV = findViewById(R.id.sessionStatusTV);
+        _activityStatusTV = findViewById(R.id.sessionStatusActivityTV);
+        _activityStatusTV.setText(getString(R.string.activity_status_unknown).toUpperCase());
 
         // recupero username e session id
         Intent i = getIntent();
@@ -113,10 +155,16 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
 
         chronometer = findViewById(R.id.sessionChronometer);
 
+        _activityTrackerService = new ActivityTrackerService(this);
 
         initializeActivityRecognition();
-        _activityTrackerService = new ActivityTrackerService();
+        startMonitoringActivityRecognition(1000);
 
+        LocalBroadcastManager.getInstance(
+                getApplicationContext()).registerReceiver(
+                _activityUpdateReceiver,
+                new IntentFilter(ActivityTrackerService.ACTIVITY_STATUS_UPDATE)
+        );
         try {
             _trainingService = new TrainingStatSensorService(this);
         } catch (NoStepCounterSensorAvailableException e) {
@@ -139,7 +187,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
     private void startButtonClicked(Button startPauseButton) {
 
         // aggiorno TV
-        StatusTV.setText(R.string.monitoring);
+        _statusTV.setText(R.string.monitoring);
         startPauseButton.setText(R.string.pause_button_text);
 
         // faccio partire o ripartire il cronometro
@@ -156,7 +204,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
     private void pauseButtonClicked(Button startPauseButton) {
 
         // aggiorno TV
-        StatusTV.setText(R.string.paused);
+        _statusTV.setText(R.string.paused);
         startPauseButton.setText(R.string.start_button_text);
 
         chronometer.stop();
@@ -182,14 +230,15 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
             // tengo conto della mancata classificazione dell'attività quando clicco pause
             _activityTrackerService.stopTacking();
         }
+        stopMonitoringActivityRecognition();
 
         Map<String, Double> percentages = _activityTrackerService.getPercentages();
 
         // DEBUG stampo i risultati a mano
-        /*Log.d("SessionActivity", "Still precentage: " + String.valueOf(fractionActivity[0]));
-        Log.d("SessionActivity", "Walking precentage: " + String.valueOf(fractionActivity[1]));
-        Log.d("SessionActivity", "Running precentage: " + String.valueOf(fractionActivity[2]));
-        Log.d("SessionActivity", "Unknown precentage: " + String.valueOf(fractionActivity[3]));*/
+        Log.d("SessionActivity", "Still precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_STILL));
+        Log.d("SessionActivity", "Walking precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
+        Log.d("SessionActivity", "Running precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
+        Log.d("SessionActivity", "Unknown precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
 
     }
 

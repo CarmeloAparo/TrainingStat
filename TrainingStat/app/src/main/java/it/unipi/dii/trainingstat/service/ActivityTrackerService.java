@@ -17,16 +17,20 @@ import com.google.android.gms.location.DetectedActivity;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ActivityTrackerService extends Service {
+public class ActivityTrackerService{
+    public static final String ACTIVITY_STATUS_UPDATE = "ActivityStatusUpdate";
     // tiene traccia del numero di millisecondi passati in ogni attività
     Map< String, Long> _msPerActivity = new HashMap< String,Long>();
     // serve per calcolare la durata di ogni tipo di attività
     private long _lastActivityTimeStamp;
     private long _totalDuration;
+    private String _lastActivityStatus;
 
     private boolean _isMonitoring;
+    private Context _context;
 
-    public ActivityTrackerService(){
+    public ActivityTrackerService(Context context){
+        _context = context;
         _msPerActivity.put(TrainingStatIntentService.ACTIVITY_STILL, 0L);
         _msPerActivity.put(TrainingStatIntentService.ACTIVITY_WALKING, 0L);
         _msPerActivity.put(TrainingStatIntentService.ACTIVITY_RUNNING, 0L);
@@ -35,58 +39,82 @@ public class ActivityTrackerService extends Service {
         _isMonitoring = false;
         _totalDuration = 0L;
         _lastActivityTimeStamp = 0L;
+        _lastActivityStatus = null;
 
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(_activityRecognitionReceiver, new IntentFilter(TrainingStatIntentService.ACTIVITY_RECOGNITION_ID));
+        // mi interessano solo le attività registrate in monitori
+        BroadcastReceiver _activityRecognitionReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String message = intent.getStringExtra("Status");
+                int type = intent.getIntExtra("ActivityType", DetectedActivity.UNKNOWN);
 
-    }
+                Log.d("[ActivityTrackerService]", message);
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+                if (_isMonitoring) { // mi interessano solo le attività registrate in monitori
+                    updateActivity(message);
+                }
 
-    private BroadcastReceiver _activityRecognitionReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra("Status");
-            int type = intent.getIntExtra("ActivityType", DetectedActivity.UNKNOWN);
-
-            Log.d("SessionActivity", message);
-
-
-            if (_isMonitoring) { // mi interessano solo le attività registrate in monitori
-                updateActivity(message);
             }
+        };
 
-        }
-    };
+        LocalBroadcastManager.getInstance(
+            _context).registerReceiver(
+                _activityRecognitionReceiver,
+                new IntentFilter(TrainingStatIntentService.ACTIVITY_RECOGNITION_ID)
+        );
+
+    }
 
     private boolean updateActivity(String activity) {
         // calcolo finestra attività e aggiorno
         long activityDuration = SystemClock.elapsedRealtime() - _lastActivityTimeStamp;
-        _totalDuration += activityDuration;
-        Long oldValue = _msPerActivity.get(activity);
+        Long oldValue = _msPerActivity.getOrDefault(activity, null);
         if(oldValue == null){
-            Log.e("[ActivityTrackerService]", "ERROR: activity <"+ activity +"> is not present in the current dictionary");
+            _lastActivityStatus = null;
+            Log.d("[ActivityTrackerService]", "[INVALID ACTIVITY] activity <"+ activity +"> is not present in the current dictionary");
             return false;
+        }
+        if(activity != _lastActivityStatus){
+            String lastStatus = (_lastActivityStatus == null) ? "null" : _lastActivityStatus;
+            Log.d("[ActivityTrackerService]", "[STATUS CHANGED] from <"+ lastStatus +"> to <"+activity+">");
+            sendMessageToActivity(activity);
         }
         Long newValue = oldValue + activityDuration;
         _msPerActivity.put(activity, newValue);
+        _totalDuration += activityDuration;
         _lastActivityTimeStamp = SystemClock.elapsedRealtime();
+        _lastActivityStatus = activity;
         return true;
     }
 
+    private void sendMessageToActivity(String activityStatus) {
+        Intent intent = new Intent(ACTIVITY_STATUS_UPDATE);
+        intent.setAction(ACTIVITY_STATUS_UPDATE);
+        // You can also include some extra data.
+        intent.putExtra("Status", activityStatus);
+
+        LocalBroadcastManager.getInstance(_context).sendBroadcast(intent);
+    }
+
     public void startTacking(){
+        Log.d("[ActivityTrackerService]", "[START TRACKING]");
         _lastActivityTimeStamp = SystemClock.elapsedRealtime();
         _isMonitoring = true;
     }
 
     public void stopTacking(){
+        Log.d("[ActivityTrackerService]", "[STOP TRACKING]");
         _lastActivityTimeStamp = SystemClock.elapsedRealtime();
         _isMonitoring = false;
 
-        updateActivity(TrainingStatIntentService.ACTIVITY_UNKNOWN);
+        if(_lastActivityStatus != null){
+            updateActivity(_lastActivityStatus);
+        }else{
+            updateActivity(TrainingStatIntentService.ACTIVITY_UNKNOWN);
+        }
+
+        _lastActivityStatus = null;
+
     }
 
     public Map<String, Double> getPercentages(){

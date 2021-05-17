@@ -45,11 +45,19 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/sessionStepCounterTV"
+                android:id="@+id/sessionStatusActivityTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="80dp"
+                android:text="@string/activity_status_unknown"
+                android:textSize="34sp" />
+
+            <TextView
+                android:id="@+id/sessionStepCounterTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:textSize="34sp" />
 
             <Chronometer
