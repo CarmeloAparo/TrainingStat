@@ -28,6 +28,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ConfirmButton.setOnClickListener(this);
 
+        Intent i = new Intent(this, BLETestActivity.class);
+        startActivity(i);
+
     }
 
     @Override

@@ -30,9 +30,13 @@ public class DatabaseManager {
 
     public DatabaseManager() {
         mDatabase = FirebaseDatabase
-                .getInstance("https://trainingstat-565d5-default-rtdb.europe-west1.firebasedatabase.app/")
+                .getInstance("https://fir-test-afd9f-default-rtdb.europe-west1.firebasedatabase.app/")
                 .getReference();
 
+    }
+
+    public void collectData(String id, Map<String, Object> data) {
+        mDatabase.child("SessionMeasurements").child(id).setValue(data);
     }
 
     public void getUser(String username, Function<User, Void> function){
