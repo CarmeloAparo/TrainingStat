@@ -10,54 +10,68 @@
         android:id="@+id/startScanning"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="158dp"
-        android:layout_marginTop="100dp"
-        android:layout_marginEnd="159dp"
+        android:layout_marginTop="32dp"
         android:onClick="manageButton"
         android:text="Start scanning"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/pathPT" />
 
     <Button
         android:id="@+id/stopScanning"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="158dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginEnd="159dp"
+        android:layout_marginTop="32dp"
         android:onClick="manageButton"
         android:text="Stop scanning"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startScanning" />
 
-    <ImageView
-        android:id="@+id/imageView3"
-        android:layout_width="371dp"
-        android:layout_height="298dp"
-        android:layout_marginBottom="32dp"
-        android:adjustViewBounds="true"
-        android:cropToPadding="false"
-        android:scaleType="fitXY"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <EditText
+        android:id="@+id/beaconDistancePT"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:ems="10"
+        android:hint="Beacon distance"
+        android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@mipmap/soccer_field_foreground" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <ca.hss.heatmaplib.HeatMap
-        android:id="@+id/heatmap"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="9dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginEnd="15dp"
-        android:layout_marginBottom="50dp"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView3"
-        app:layout_constraintEnd_toEndOf="@+id/imageView3"
-        app:layout_constraintStart_toStartOf="@+id/imageView3"
-        app:layout_constraintTop_toTopOf="@+id/imageView3"
-        app:maxOpacity="255"
-        app:minOpacity="0" />
+    <EditText
+        android:id="@+id/pathPT"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:ems="10"
+        android:hint="Path"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gaitPT" />
+
+    <EditText
+        android:id="@+id/gaitPT"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:ems="10"
+        android:hint="Gait"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/beaconDistancePT" />
+
+    <TextView
+        android:id="@+id/messagesTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="70dp"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/stopScanning" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
