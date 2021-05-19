@@ -110,6 +110,7 @@ public class BLETestActivity extends AppCompatActivity {
         else {
             if (buttonId == R.id.stopScanning) {
                 stopScanning();
+                messageTV.setText("Scanning stopped");
                 lastMeasurement++;
                 String id = "Measure_" + lastMeasurement;
                 DatabaseManager databaseManager = new DatabaseManager();
