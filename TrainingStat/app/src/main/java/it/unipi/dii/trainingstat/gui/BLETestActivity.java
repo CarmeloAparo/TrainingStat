@@ -31,8 +31,10 @@ import com.kontakt.sdk.android.common.KontaktSDK;
 import com.kontakt.sdk.android.common.profile.IBeaconDevice;
 import com.kontakt.sdk.android.common.profile.IBeaconRegion;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +126,7 @@ public class BLETestActivity extends AppCompatActivity {
         proximityManager.configuration()
                 .scanMode(ScanMode.LOW_LATENCY)     // Scan performance (Balanced, Low Latency or Low Power)
                 .scanPeriod(ScanPeriod.RANGING)     // Scan duration and intervals
-                .activityCheckConfiguration(ActivityCheckConfiguration.DISABLED)
+                .activityCheckConfiguration(ActivityCheckConfiguration.MINIMAL)
                 .deviceUpdateCallbackInterval(500);
     }
 
@@ -138,6 +140,10 @@ public class BLETestActivity extends AppCompatActivity {
                 //Beacons updated
                 List<Map<String, Object>> measures = (List<Map<String, Object>>) data.get("measurements");
                 Map<String, Object> measure = new HashMap<>();
+                SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+                Calendar calendar = Calendar.getInstance();
+                String timestamp = df.format(calendar.getTime());
+                measure.put("Timestamp", timestamp);
                 for (IBeaconDevice iBeacon : iBeacons) {
                     Log.d("Test", "UUID: " + iBeacon.getUniqueId());
                     Log.d("Test", "UUID: " + iBeacon.getRssi());
@@ -146,13 +152,16 @@ public class BLETestActivity extends AppCompatActivity {
                     Map<String, Object> beacon = new HashMap<>();
                     beacon.put("RSSI", iBeacon.getRssi());
                     beacon.put("Distance", iBeacon.getDistance());
+
                     measure.put(iBeacon.getUniqueId(), beacon);
                 }
                 measures.add(measure);
             }
 
             @Override
-            public void onIBeaconLost(IBeaconDevice iBeacon, IBeaconRegion region) {}
+            public void onIBeaconLost(IBeaconDevice iBeacon, IBeaconRegion region) {
+                Log.d("Test_LOSS", "BEACON PERSO ");
+            }
         });
     }
 
