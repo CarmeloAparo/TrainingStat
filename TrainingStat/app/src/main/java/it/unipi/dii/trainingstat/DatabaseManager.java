@@ -35,7 +35,29 @@ public class DatabaseManager {
 
     }
 
-    public void collectData(String id, Map<String, Object> data) {
+    public void getLastMeasurementId(Function<Integer, Void> setMeasurement) {
+        mDatabase.child("lastMeasurementId").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if (!task.isSuccessful()) {
+                    Log.e("Test", "Error on task", task.getException());
+                }
+                else {
+                    DataSnapshot d = task.getResult();
+                    User u;
+                    if(d.getValue() == null) {
+                        setMeasurement.apply(0);
+                    } else {
+                        Integer lastMeasurement = d.getValue(Integer.class);
+                        setMeasurement.apply(lastMeasurement);
+                    }
+                }
+            }
+        });
+    }
+
+    public void collectData(String id, Map<String, Object> data, int lastMeasurementID) {
+        mDatabase.child("lastMeasurementId").setValue(lastMeasurementID);
         mDatabase.child("SessionMeasurements").child(id).setValue(data);
     }
 
