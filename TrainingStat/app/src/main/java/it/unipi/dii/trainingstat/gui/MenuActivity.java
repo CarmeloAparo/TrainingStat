@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -104,7 +105,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
             saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
             Intent i = new Intent(this, SessionActivity.class);
             i.putExtra("username", Username);
-            i.putExtra("trainingSession", trainingSession);
+            i.putExtra("trainingSessionId", trainingSession.getId());
             startActivity(i);
         }
         return null;

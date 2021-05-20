@@ -57,6 +57,10 @@ public class User implements Serializable {
         Map<String, String> session = new HashMap<>();
         session.put("id", sessionID);
         session.put("startDate", date);
-        pastSessions.add(0, session);
+        // avoid duplicates
+        if(!pastSessions.contains(session)){
+            pastSessions.add(0, session);
+        }
+
     }
 }

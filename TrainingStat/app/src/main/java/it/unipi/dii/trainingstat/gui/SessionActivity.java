@@ -271,7 +271,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             // tengo conto della mancata classificazione dell'attività quando clicco pause
             _activityTrackerService.stopTacking();
         }
-        _userSession.setStatus("terminate");
+        _userSession.setStatus("terminated");
         _userSession.setEndDate(TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()));
         updateDbUserSession();
         stopMonitoringActivityRecognition();

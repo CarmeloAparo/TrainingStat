@@ -59,8 +59,8 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
             trainingSession.setEndDate(endDate);
             databaseManager.updateTrainingEndDate(trainingSession.getId(), endDate);
             databaseManager.listenUserSessionsChanged(trainingSession.getId(), this::addUserSession);
-            databaseManager.updateTrainingStatus(trainingSession.getId(), "terminate");
-            trainingSession.setStatus("terminate");
+            databaseManager.updateTrainingStatus(trainingSession.getId(), "terminated");
+            trainingSession.setStatus("terminated");
         }
     }
 
@@ -93,8 +93,6 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         double stillPerc = 0;
         double walkPerc = 0;
         double runPerc = 0;
-        double maxSpeed = 0;
-        double meanSpeed = 0;
         for (Map.Entry<String, UserSession> entry : trainingSession.getUserSessions().entrySet()) {
             UserSession userSession = entry.getValue();
             totSteps += userSession.getTotSteps();
