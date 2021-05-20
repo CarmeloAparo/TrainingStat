@@ -75,6 +75,8 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     public Void addUserSession(UserSession userSession) {
+        // controllare che tutte le sessioni figlie abbiano status terminated
+
         trainingSession.addUserSession(userSession);
         if (trainingSession.getUserSessions().keySet().size() == numPlayers) {
             databaseManager.removeUserSessionsListener(trainingSession.getId());
