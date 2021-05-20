@@ -59,4 +59,5 @@ public class TrainingStatSensorService implements SensorEventListener, ITraining
     public void registerSensors() {
         sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
+
 }

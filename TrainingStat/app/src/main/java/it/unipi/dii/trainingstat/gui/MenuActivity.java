@@ -19,6 +19,7 @@ import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.entities.UserSession;
+import it.unipi.dii.trainingstat.utils.TSDateUtils;
 
 public class MenuActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -50,7 +51,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
     public TrainingSession startTrainingSession() {
         user.setLastIncrementalID(user.getLastIncrementalID() + 1);
         String id = Username + "_" + user.getLastIncrementalID();
-        TrainingSession trainingSession = new TrainingSession(id, Username, "started", null, null);
+        TrainingSession trainingSession = new TrainingSession(id, Username, "started", TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()), null);
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.writeTrainingSession(trainingSession);
         databaseManager.updateUserIncrementalID(Username, user.getLastIncrementalID());
@@ -59,6 +60,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
 
     public void newCollectiveSessionButtonClicked(View v) {
         TrainingSession trainingSession = startTrainingSession();
+        saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
         Intent i = new Intent(this, TrainerActivity.class);
         i.putExtra("User", user);
         i.putExtra("TrainingSession", trainingSession);
@@ -67,6 +69,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
 
     public void newIndividualSessionButtonClicked(View v) {
         TrainingSession trainingSession = startTrainingSession();
+        saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
         Intent i = new Intent(this, SessionActivity.class);
         i.putExtra("username", Username);
         i.putExtra("trainingSessionId", trainingSession.getId());
@@ -76,6 +79,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
     public void joinCollectiveSessionButtonClicked(View v) {
         EditText sessionIdToJoinET = findViewById(R.id.menuInsertSessionIdET);
         String sessionIdToJoin = sessionIdToJoinET.getText().toString();
+
         // Don't even bother the DB with an empty session id
         if (sessionIdToJoin.equals("")) {
             Toast.makeText(this, "A session id must be provided", Toast.LENGTH_SHORT).show();
@@ -97,6 +101,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
             session.setUsername(Username);
             DatabaseManager databaseManager = new DatabaseManager();
             databaseManager.writeUserSession(trainingSession.getId(), session);
+            saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
             Intent i = new Intent(this, SessionActivity.class);
             i.putExtra("username", Username);
             i.putExtra("trainingSession", trainingSession);
@@ -130,4 +135,14 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         }
         return null;
     }
+
+    // aggiorno l'elenco delle past session dell'utente
+    private void saveUserPastSession(String sessionId, String date){
+
+        user.addPastSession(sessionId, date);
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.addUserPastSessions(user.getUsername(), user.getPastSessions());
+
+    }
+
 }

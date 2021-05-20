@@ -54,6 +54,8 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private Chronometer _chronometer;
     private long _totalActivityTime; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
+    private Integer _totalSteps;
+
 
     private ActivityRecognitionClient _activityRecognitionClient;
     private PendingIntent _pendingIntent;
@@ -128,6 +130,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private void updateDbUserSession(){
         DatabaseManager dm = new DatabaseManager();
         _userSession.setTotalActivityTime(_totalActivityTime);
+        _userSession.setTotSteps(_totalSteps);
         Map<String, Double> percentages = _activityTrackerService.getPercentages();
         // DEBUG stampo i risultati a mano
         Log.d("SessionActivity", "Still precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_STILL));
@@ -282,6 +285,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     @Override
     public void passStepCounter(int steps) {
+        _totalSteps = steps;
         TextView stepCounterTV = findViewById(R.id.sessionStepCounterTV);
         stepCounterTV.setText(String.valueOf(steps));
     }
