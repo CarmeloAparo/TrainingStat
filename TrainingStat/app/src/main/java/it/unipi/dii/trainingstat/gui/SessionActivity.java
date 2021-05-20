@@ -1,30 +1,145 @@
 package it.unipi.dii.trainingstat.gui;
 
+import android.Manifest;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.service.ActivityTrackerService;
+import it.unipi.dii.trainingstat.service.DummyService;
+import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
+import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
+import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
+import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
+import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 
-public class SessionActivity extends AppCompatActivity {
 
+public class SessionActivity extends AppCompatActivity implements ICallBackForTrainingService {
+
+    private static final int ACTIVITY_PERMISSION_CODE = 0;
+    private ActivityTrackerService _activityTrackerService;
+    private ITrainingSensorService _trainingService;
+    private final String TAG = "[SessionActivity]";
     private Chronometer chronometer;
     private long pauseOffset; // serve per tenere traccia del tempo contato prima di cliccare pausa
-    private boolean running;
-    private TextView StatusTV;
+    private boolean chronoRunning;
+
+    private ActivityRecognitionClient _activityRecognitionClient;
+    private PendingIntent _pendingIntent;
+
+
+    private TextView _activityStatusTV;
+    private TextView _statusTV;
+
+    BroadcastReceiver _activityUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra("Status");
+
+            Log.d("[SessionActivity]", message);
+
+            _activityStatusTV.setText(message.toUpperCase());
+        }
+    };
+
+
+    private void initializeActivityRecognition(){
+
+        requestActivityRecognitionPermissions();
+
+        if(!hasActivityRecognitionPermission()){
+            Toast.makeText(this, "Activity recognition permission are necessary to use the app", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
+
+        _activityRecognitionClient  =  new  ActivityRecognitionClient(this);
+        Intent  i  =  new  Intent(this,  TrainingStatIntentService.class);
+        _pendingIntent  =  PendingIntent.getService(this,  1,  i,  PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private void startMonitoringActivityRecognition(int periodInMs){
+        Task<Void> task  =  _activityRecognitionClient.requestActivityUpdates(periodInMs,  _pendingIntent);
+
+        task.addOnSuccessListener(result -> Log.d(TAG, "Successfully requested activity updates"));
+        // Adds a listener that is called if the Task fails.
+        Task<Void> voidTask = task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, "Requesting activity updates failed to start");
+            }
+        });
+    }
+
+    private void stopMonitoringActivityRecognition(){
+        if(_activityRecognitionClient != null){
+            Task<Void> task = _activityRecognitionClient.removeActivityUpdates(_pendingIntent);
+            // Adds a listener that is called if the Task completes successfully.
+            task.addOnSuccessListener(result -> Log.d(TAG, "Removed activity updates successfully!"));
+            // Adds a listener that is called if the Task fails.
+            task.addOnFailureListener(e -> Log.e(TAG, "Failed to remove activity updates!"));
+        }
+    }
+
+
+    private void requestActivityRecognitionPermissions() {
+        List<String> permissionsToRequest = new ArrayList<>();
+
+        if (!hasActivityRecognitionPermission()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
+            }else{
+                permissionsToRequest.add("com.google.android.gms.permission.ACTIVITY_RECOGNITION");
+            }
+        }
+
+        if (!permissionsToRequest.isEmpty()) {
+            this.askPermissions(permissionsToRequest.toArray(new String[0]), ACTIVITY_PERMISSION_CODE);
+        }
+    }
+
+    private boolean hasActivityRecognitionPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED;
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        StatusTV = findViewById(R.id.sessionStatusTV);
+        _statusTV = findViewById(R.id.sessionStatusTV);
+        _activityStatusTV = findViewById(R.id.sessionStatusActivityTV);
+        _activityStatusTV.setText(getString(R.string.activity_status_unknown).toUpperCase());
 
         // recupero username e session id
         Intent i = getIntent();
@@ -40,62 +155,144 @@ public class SessionActivity extends AppCompatActivity {
 
         chronometer = findViewById(R.id.sessionChronometer);
 
+        _activityTrackerService = new ActivityTrackerService(this);
+
+        initializeActivityRecognition();
+        startMonitoringActivityRecognition(1000);
+
+        LocalBroadcastManager.getInstance(
+                getApplicationContext()).registerReceiver(
+                _activityUpdateReceiver,
+                new IntentFilter(ActivityTrackerService.ACTIVITY_STATUS_UPDATE)
+        );
+        try {
+            _trainingService = new TrainingStatSensorService(this);
+        } catch (NoStepCounterSensorAvailableException e) {
+            Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
+            _trainingService = new DummyService();
+        }
     }
 
-    // calls the right handler method depending on the state of the button
-    public void startPauseButtonClicked(View view){
-        Button b = (Button)view;
 
-        if(!running) startButtonClicked(b);
+    // calls the right handler method depending on the state of the button
+    public void startPauseButtonClicked(View view) {
+        Button b = (Button) view;
+
+        if (!chronoRunning) startButtonClicked(b);
         else pauseButtonClicked(b);
-        running = !running;
+        chronoRunning = !chronoRunning;
     }
 
 
     private void startButtonClicked(Button startPauseButton) {
 
-        StatusTV.setText("Monitoring");
+        // aggiorno TV
+        _statusTV.setText(R.string.monitoring);
         startPauseButton.setText(R.string.pause_button_text);
 
+        // faccio partire o ripartire il cronometro
         chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
         chronometer.start();
 
-        //TODO fare partire il timer, inviare i dati al db
+        // registro il sensore degli step
+        _trainingService.registerSensors();
 
-
+        _activityTrackerService.startTacking();
     }
 
 
-    private void pauseButtonClicked(Button startPauseButton){
+    private void pauseButtonClicked(Button startPauseButton) {
 
-        StatusTV.setText("Paused");
+        // aggiorno TV
+        _statusTV.setText(R.string.paused);
         startPauseButton.setText(R.string.start_button_text);
 
         chronometer.stop();
+
+        // contiene il tempo passato fino adesso
         pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
 
-        // TODO fermare il timer e il recupero dei vari dati
+        // scollego il sensore degli step
+        _trainingService.unregisterSensors();
+
+        _activityTrackerService.stopTacking();
 
     }
 
 
     public void stopButtonClicked(View view) {
 
-        StatusTV.setText("Ready");
+        if(chronoRunning){
+            chronometer.stop();
+            // adesso conterrà tutti i ms passati nella sessione
+            pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
+            _trainingService.unregisterSensors();
+            // tengo conto della mancata classificazione dell'attività quando clicco pause
+            _activityTrackerService.stopTacking();
+        }
+        stopMonitoringActivityRecognition();
 
-        // ATTENZIONE QUESTA SAREBBE LA RESET QUINDI VA CAMBIATA
-        chronometer.setBase(SystemClock.elapsedRealtime());
-        pauseOffset = 0;
+        Map<String, Double> percentages = _activityTrackerService.getPercentages();
 
-        /*
-        TODO bloccare il timer,
-          chiudere la sessione,
-          chiudere l'attività corrente,
-           passare all'attività di visualizzazione delle statistiche
-        */
+        // DEBUG stampo i risultati a mano
+        Log.d("SessionActivity", "Still precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_STILL));
+        Log.d("SessionActivity", "Walking precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
+        Log.d("SessionActivity", "Running precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
+        Log.d("SessionActivity", "Unknown precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
 
     }
 
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public void passStepCounter(int steps) {
+        TextView stepCounterTV = findViewById(R.id.sessionStepCounterTV);
+        stepCounterTV.setText(String.valueOf(steps));
+    }
+
+    @Override
+    public void askPermissions(String[] permissions, int permissionCode) {
+        ActivityCompat.requestPermissions(this,
+                permissions,
+                permissionCode);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode,
+            @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (grantResults.length != 0 /*&& requestCode == 0*/){
+            for (int i = 0; i< grantResults.length; i++){
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED){
+                    Log.i("Permission request", permissions[i] + " granted");
+                }
+            }
+        }
+
+    }
+
+    @Override
+    public void notifyRunning() {
+        Toast.makeText(this, "RUNNING", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void notifyStill() {
+        Toast.makeText(this, "STILL", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void notifyWalking() {
+        Toast.makeText(this, "WALKING", Toast.LENGTH_SHORT).show();
+    }
 
 }
 

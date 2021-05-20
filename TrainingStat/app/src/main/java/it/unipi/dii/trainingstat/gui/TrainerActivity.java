@@ -19,9 +19,7 @@ import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public class TrainerActivity extends AppCompatActivity implements View.OnClickListener {
     private User user;
@@ -41,7 +39,7 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         usernameTV.setText(user.getUsername());
         sessionIdTV.setText(trainingSession.getId());
         Button startStopButton = findViewById(R.id.trainerStartStopButton);
-        startStopButton.setText(R.string.trainerStartButton);
+        startStopButton.setText(R.string.start_button_text);
         databaseManager = new DatabaseManager();
         databaseManager.listenUserSessionsAdded(trainingSession.getId(), this::addUserButton);
         numPlayers = 0;
@@ -49,17 +47,17 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
 
     public void startStopButtonClicked(View view) {
         Button button = (Button) view;
-        if (button.getText().toString().equals(this.getResources().getString(R.string.trainerStartButton))) {
+        if (button.getText().toString().equals(this.getResources().getString(R.string.start_button_text))) {
             databaseManager.removeUserSessionsListener(trainingSession.getId());
-            button.setText(R.string.trainerStopButton);
+            button.setText(R.string.stop_button_text);
             @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
             Calendar calendar = Calendar.getInstance();
             String startDate = df.format(calendar.getTime());
             trainingSession.setStartDate(startDate);
             databaseManager.updateTrainingStartDate(trainingSession.getId(), startDate);
         }
-        else if(button.getText().toString().equals(this.getResources().getString(R.string.trainerStopButton))) {
-            button.setText(R.string.trainerStoppedButton);
+        else if(button.getText().toString().equals(this.getResources().getString(R.string.stop_button_text))) {
+            button.setText(R.string.trainer_stopped_button);
             @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
             Calendar calendar = Calendar.getInstance();
             String endDate = df.format(calendar.getTime());

@@ -6,15 +6,22 @@
     <string name="text_view_last_sessions">Last Sessions</string>
     <string name="new_collective_session_button_text">NEW COLLECTIVE SESSION</string>
     <string name="new_individual_session_button_text">NEW INDIVIDUAL SESSION</string>
-    <string name="join_collective_session_button_text">JOIN COLLECTIVE SESSION</string>
+    <string name="join_session_button_text">JOIN SESSION</string>
     <string name="start_button_text">START</string>
     <string name="stop_button_text">STOP</string>
     <string name="pause_button_text">PAUSE</string>
-    <string name="insert_session_id_placeholder">Pippo_2</string>
+    <string name="monitoring">Monitoring</string>
+    <string name="ready">Ready</string>
+    <string name="paused">Paused</string>
+    <string name="insert_session_id_placeholder">Session_ID</string>
     <string name="status_text_view_default">Ready</string>
-    <string name="trainerUsersTV">Players</string>
-    <string name="trainerStartButton">Start session</string>
-    <string name="trainerStopButton">Stop session</string>
-    <string name="trainerStoppedButton">Session concluded</string>
+    <string name="step_sensor_unavailable_toast">Step sensor not available</string>
+    <string name="activity_status_still">still</string>
+    <string name="activity_status_walking">walking</string>
+    <string name="activity_status_running">running</string>
+    <string name="activity_status_unknown">unknown</string>
+    <string name="trainer_user_tv">Players</string>
+    <string name="trainer_stopped_button">Session concluded</string>
+
 
 </resources>
