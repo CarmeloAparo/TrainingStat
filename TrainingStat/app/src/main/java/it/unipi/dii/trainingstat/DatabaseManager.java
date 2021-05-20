@@ -1,11 +1,9 @@
 package it.unipi.dii.trainingstat;
 
 
-import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -20,9 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
-import it.unipi.dii.trainingstat.gui.MainActivity;
-import it.unipi.dii.trainingstat.gui.MenuActivity;
 import it.unipi.dii.trainingstat.entities.UserSession;
 
 public class DatabaseManager {

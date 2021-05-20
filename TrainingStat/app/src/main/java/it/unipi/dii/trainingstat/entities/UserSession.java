@@ -5,34 +5,39 @@ import java.util.List;
 
 public class UserSession implements Serializable {
     private String username;
-    private int totSteps;
+    private Integer totSteps;
     private List<List<Double>> heatmap;
-    private double stillPerc;
-    private double walkPerc;
-    private double runPerc;
-    private double maxSpeed;
-    private double meanSpeed;
+    private Double stillPerc;
+    private Double walkPerc;
+    private Double runPerc;
+    private Double unknownPerc;
+    private String startDate;
+    private String endDate;
+    private Long totalActivityTime;
+    private String status;
 
     // Empty constructor is needed by Firebase
     public UserSession() {}
 
-    public UserSession(String username, int totSteps, List<List<Double>> heatmap, double stillPerc,
-                       double walkPerc, double runPerc, double maxSpeed, double meanSpeed) {
+    public UserSession(String username, Integer totSteps, List<List<Double>> heatmap, Double stillPerc, Double walkPerc, Double runPerc, Double unknownPerc, String startDate, String endDate, Long totalActivityTime, String status) {
         this.username = username;
         this.totSteps = totSteps;
         this.heatmap = heatmap;
-        this. stillPerc = stillPerc;
+        this.stillPerc = stillPerc;
         this.walkPerc = walkPerc;
         this.runPerc = runPerc;
-        this.maxSpeed = maxSpeed;
-        this.meanSpeed = meanSpeed;
+        this.unknownPerc = unknownPerc;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.totalActivityTime = totalActivityTime;
+        this.status = status;
     }
 
     public String getUsername() {
         return username;
     }
 
-    public int getTotSteps() {
+    public Integer getTotSteps() {
         return totSteps;
     }
 
@@ -40,29 +45,21 @@ public class UserSession implements Serializable {
         return heatmap;
     }
 
-    public double getStillPerc() {
+    public Double getStillPerc() {
         return stillPerc;
     }
 
-    public double getWalkPerc() {
+    public Double getWalkPerc() {
         return walkPerc;
     }
 
-    public double getRunPerc() {
+    public Double getRunPerc() {
         return runPerc;
-    }
-
-    public double getMaxSpeed() {
-        return maxSpeed;
-    }
-
-    public double getMeanSpeed() {
-        return meanSpeed;
     }
 
     public void setUsername(String username) { this.username = username; }
 
-    public void setTotSteps(int totSteps) {
+    public void setTotSteps(Integer totSteps) {
         this.totSteps = totSteps;
     }
 
@@ -70,23 +67,55 @@ public class UserSession implements Serializable {
         this.heatmap = heatmap;
     }
 
-    public void setStillPerc(double stillPerc) {
+    public void setStillPerc(Double stillPerc) {
         this.stillPerc = stillPerc;
     }
 
-    public void setWalkPerc(double walkPerc) {
+    public void setWalkPerc(Double walkPerc) {
         this.walkPerc = walkPerc;
     }
 
-    public void setRunPerc(double runPerc) {
+    public void setRunPerc(Double runPerc) {
         this.runPerc = runPerc;
     }
 
-    public void setMaxSpeed(double maxSpeed) {
-        this.maxSpeed = maxSpeed;
+    public Double getUnknownPerc() {
+        return unknownPerc;
     }
 
-    public void setMeanSpeed(double meanSpeed) {
-        this.meanSpeed = meanSpeed;
+    public void setUnknownPerc(Double unknownPerc) {
+        this.unknownPerc = unknownPerc;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
+    }
+
+    public Long getTotalActivityTime() {
+        return totalActivityTime;
+    }
+
+    public void setTotalActivityTime(Long totalActivityTime) {
+        this.totalActivityTime = totalActivityTime;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

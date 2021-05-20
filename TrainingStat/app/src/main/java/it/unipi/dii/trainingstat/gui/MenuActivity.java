@@ -1,9 +1,7 @@
 package it.unipi.dii.trainingstat.gui;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,15 +11,12 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
-import it.unipi.dii.trainingstat.TrainingSession;
+import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.entities.UserSession;
 
@@ -74,7 +69,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         TrainingSession trainingSession = startTrainingSession();
         Intent i = new Intent(this, SessionActivity.class);
         i.putExtra("username", Username);
-        i.putExtra("trainingSession", trainingSession);
+        i.putExtra("trainingSessionId", trainingSession.getId());
         startActivity(i);
     }
 

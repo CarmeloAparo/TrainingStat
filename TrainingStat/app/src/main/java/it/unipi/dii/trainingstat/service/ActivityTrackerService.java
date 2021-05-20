@@ -104,7 +104,6 @@ public class ActivityTrackerService{
 
     public void stopTacking(){
         Log.d("[ActivityTrackerService]", "[STOP TRACKING]");
-        _lastActivityTimeStamp = SystemClock.elapsedRealtime();
         _isMonitoring = false;
 
         if(_lastActivityStatus != null){
@@ -121,7 +120,10 @@ public class ActivityTrackerService{
         Map<String, Double> tmp = new HashMap< String,Double>();
         for ( String msPerActivityKey : _msPerActivity.keySet()) {
             Double actualValue = Double.valueOf(_msPerActivity.get(msPerActivityKey));
-            Double tmpValue = actualValue/_totalDuration*100;
+            Double tmpValue = 0D;
+            if(_totalDuration != 0L){
+                tmpValue = actualValue/_totalDuration*100;
+            }
             tmp.put(msPerActivityKey, tmpValue);
         }
         return tmp;

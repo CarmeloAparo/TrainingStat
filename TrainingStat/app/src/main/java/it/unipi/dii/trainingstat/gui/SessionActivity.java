@@ -24,23 +24,25 @@ import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
-import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.entities.UserSession;
 import it.unipi.dii.trainingstat.service.ActivityTrackerService;
 import it.unipi.dii.trainingstat.service.DummyService;
 import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
 import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
-import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
 import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
+import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
+import it.unipi.dii.trainingstat.utils.TSDateUtils;
 
 
 public class SessionActivity extends AppCompatActivity implements ICallBackForTrainingService {
@@ -49,13 +51,15 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
     private ActivityTrackerService _activityTrackerService;
     private ITrainingSensorService _trainingService;
     private final String TAG = "[SessionActivity]";
-    private Chronometer chronometer;
-    private long pauseOffset; // serve per tenere traccia del tempo contato prima di cliccare pausa
+    private Chronometer _chronometer;
+    private long _totalActivityTime; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
 
     private ActivityRecognitionClient _activityRecognitionClient;
     private PendingIntent _pendingIntent;
 
+    private UserSession _userSession;
+    private String _trainingSessionId;
 
     private TextView _activityStatusTV;
     private TextView _statusTV;
@@ -70,6 +74,71 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
             _activityStatusTV.setText(message.toUpperCase());
         }
     };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_session);
+
+        _statusTV = findViewById(R.id.sessionStatusTV);
+        _activityStatusTV = findViewById(R.id.sessionStatusActivityTV);
+        _activityStatusTV.setText(getString(R.string.activity_status_unknown).toUpperCase());
+
+        // recupero username e session id
+        Intent i = getIntent();
+        String username = i.getStringExtra("username");
+        _trainingSessionId = i.getStringExtra("trainingSessionId");
+
+        generateUserSession(username);
+
+        // inizializzo le textView
+        TextView UsernameTextView = findViewById(R.id.sessionUsernameTV);
+        TextView SessionIdTextView = findViewById(R.id.sessionSessionIdTV);
+
+        UsernameTextView.setText(username);
+        SessionIdTextView.setText(_trainingSessionId);
+
+        _chronometer = findViewById(R.id.sessionChronometer);
+
+        _activityTrackerService = new ActivityTrackerService(this);
+
+        initializeActivityRecognition();
+        startMonitoringActivityRecognition(1000);
+
+        LocalBroadcastManager.getInstance(
+                getApplicationContext()).registerReceiver(
+                _activityUpdateReceiver,
+                new IntentFilter(ActivityTrackerService.ACTIVITY_STATUS_UPDATE)
+        );
+        try {
+            _trainingService = new TrainingStatSensorService(this);
+        } catch (NoStepCounterSensorAvailableException e) {
+            Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
+            _trainingService = new DummyService();
+        }
+    }
+
+    private void generateUserSession(String username) {
+        DatabaseManager dm = new DatabaseManager();
+        _userSession = new UserSession(username, null, null, null, null, null, null, null, null, null, "ready");
+        dm.writeUserSession(_trainingSessionId, _userSession);
+    }
+
+    private void updateDbUserSession(){
+        DatabaseManager dm = new DatabaseManager();
+        _userSession.setTotalActivityTime(_totalActivityTime);
+        Map<String, Double> percentages = _activityTrackerService.getPercentages();
+        // DEBUG stampo i risultati a mano
+        Log.d("SessionActivity", "Still precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_STILL));
+        Log.d("SessionActivity", "Walking precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
+        Log.d("SessionActivity", "Running precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
+        Log.d("SessionActivity", "Unknown precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
+        _userSession.setStillPerc(percentages.get(TrainingStatIntentService.ACTIVITY_STILL));
+        _userSession.setWalkPerc(percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
+        _userSession.setRunPerc(percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
+        _userSession.setUnknownPerc(percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
+        dm.writeUserSession(_trainingSessionId, _userSession);
+    }
 
 
     private void initializeActivityRecognition(){
@@ -132,48 +201,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
     }
 
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_session);
-
-        _statusTV = findViewById(R.id.sessionStatusTV);
-        _activityStatusTV = findViewById(R.id.sessionStatusActivityTV);
-        _activityStatusTV.setText(getString(R.string.activity_status_unknown).toUpperCase());
-
-        // recupero username e session id
-        Intent i = getIntent();
-        String Username = i.getStringExtra("username");
-        String sessionId = i.getStringExtra("sessionId");
-
-        // inizializzo le textView
-        TextView UsernameTextView = findViewById(R.id.sessionUsernameTV);
-        TextView SessionIdTextView = findViewById(R.id.sessionSessionIdTV);
-
-        UsernameTextView.setText(Username);
-        SessionIdTextView.setText(sessionId);
-
-        chronometer = findViewById(R.id.sessionChronometer);
-
-        _activityTrackerService = new ActivityTrackerService(this);
-
-        initializeActivityRecognition();
-        startMonitoringActivityRecognition(1000);
-
-        LocalBroadcastManager.getInstance(
-                getApplicationContext()).registerReceiver(
-                _activityUpdateReceiver,
-                new IntentFilter(ActivityTrackerService.ACTIVITY_STATUS_UPDATE)
-        );
-        try {
-            _trainingService = new TrainingStatSensorService(this);
-        } catch (NoStepCounterSensorAvailableException e) {
-            Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
-            _trainingService = new DummyService();
-        }
-    }
-
-
     // calls the right handler method depending on the state of the button
     public void startPauseButtonClicked(View view) {
         Button b = (Button) view;
@@ -191,13 +218,22 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
         startPauseButton.setText(R.string.pause_button_text);
 
         // faccio partire o ripartire il cronometro
-        chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
-        chronometer.start();
+        _chronometer.setBase(SystemClock.elapsedRealtime() - _totalActivityTime);
+        _chronometer.start();
 
         // registro il sensore degli step
         _trainingService.registerSensors();
 
         _activityTrackerService.startTacking();
+
+        _userSession.setStatus("monitoring");
+        if(_userSession.getStartDate() == null){
+            Date now = TSDateUtils.getCurrentUTCDate();
+            String nowString = TSDateUtils.DateToJsonString(now);
+            _userSession.setStartDate(nowString);
+        }
+
+        updateDbUserSession();
     }
 
 
@@ -207,39 +243,34 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
         _statusTV.setText(R.string.paused);
         startPauseButton.setText(R.string.start_button_text);
 
-        chronometer.stop();
+        _chronometer.stop();
 
         // contiene il tempo passato fino adesso
-        pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
+        _totalActivityTime = SystemClock.elapsedRealtime() - _chronometer.getBase();
 
         // scollego il sensore degli step
         _trainingService.unregisterSensors();
 
         _activityTrackerService.stopTacking();
-
+        _userSession.setStatus("paused");
+        updateDbUserSession();
     }
 
 
     public void stopButtonClicked(View view) {
 
         if(chronoRunning){
-            chronometer.stop();
+            _chronometer.stop();
             // adesso conterrà tutti i ms passati nella sessione
-            pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
+            _totalActivityTime = SystemClock.elapsedRealtime() - _chronometer.getBase();
             _trainingService.unregisterSensors();
             // tengo conto della mancata classificazione dell'attività quando clicco pause
             _activityTrackerService.stopTacking();
         }
+        _userSession.setStatus("terminate");
+        _userSession.setEndDate(TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()));
+        updateDbUserSession();
         stopMonitoringActivityRecognition();
-
-        Map<String, Double> percentages = _activityTrackerService.getPercentages();
-
-        // DEBUG stampo i risultati a mano
-        Log.d("SessionActivity", "Still precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_STILL));
-        Log.d("SessionActivity", "Walking precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
-        Log.d("SessionActivity", "Running precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
-        Log.d("SessionActivity", "Unknown precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
-
     }
 
 

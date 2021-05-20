@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
-import it.unipi.dii.trainingstat.TrainingSession;
+import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.entities.UserSession;
 
@@ -106,15 +106,11 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
             stillPerc += userSession.getStillPerc();
             walkPerc += userSession.getWalkPerc();
             runPerc += userSession.getRunPerc();
-            maxSpeed = Double.max(maxSpeed, userSession.getMaxSpeed());
-            meanSpeed += userSession.getMeanSpeed();
         }
         aggregateResults.setTotSteps(totSteps / numPlayers);
         aggregateResults.setStillPerc(stillPerc / numPlayers);
         aggregateResults.setWalkPerc(walkPerc / numPlayers);
         aggregateResults.setRunPerc(runPerc / numPlayers);
-        aggregateResults.setMaxSpeed(maxSpeed);
-        aggregateResults.setMeanSpeed(meanSpeed / numPlayers);
         return aggregateResults;
     }
 
