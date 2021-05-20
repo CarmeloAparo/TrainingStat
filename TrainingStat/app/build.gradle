@@ -28,6 +28,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    packagingOptions {
+        exclude 'main/AndroidManifest.xml'
+    }
 }
 
 dependencies {
@@ -46,4 +49,5 @@ dependencies {
     implementation 'com.google.firebase:firebase-database'
     //for activity recognition
     implementation 'com.google.android.gms:play-services-location:18.0.0'
+    implementation 'io.kontakt.mvn:sdk:5.0.7'
 }
