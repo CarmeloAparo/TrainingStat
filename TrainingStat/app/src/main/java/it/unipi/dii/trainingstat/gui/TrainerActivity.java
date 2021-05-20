@@ -7,6 +7,7 @@ import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.entities.UserSession;
+import it.unipi.dii.trainingstat.utils.TSDateUtils;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -50,22 +51,16 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         if (button.getText().toString().equals(this.getResources().getString(R.string.start_button_text))) {
             databaseManager.removeUserSessionsListener(trainingSession.getId());
             button.setText(R.string.stop_button_text);
-            @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-            Calendar calendar = Calendar.getInstance();
-            String startDate = df.format(calendar.getTime());
-            trainingSession.setStartDate(startDate);
-            databaseManager.updateTrainingStartDate(trainingSession.getId(), startDate);
         }
         else if(button.getText().toString().equals(this.getResources().getString(R.string.stop_button_text))) {
             button.setText(R.string.trainer_stopped_button);
-            @SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-            Calendar calendar = Calendar.getInstance();
-            String endDate = df.format(calendar.getTime());
+
+            String endDate = TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate());
             trainingSession.setEndDate(endDate);
             databaseManager.updateTrainingEndDate(trainingSession.getId(), endDate);
             databaseManager.listenUserSessionsChanged(trainingSession.getId(), this::addUserSession);
-            databaseManager.setEndedStatus(trainingSession.getId());
-            trainingSession.setEndedStatus();
+            databaseManager.updateTrainingStatus(trainingSession.getId(), "terminate");
+            trainingSession.setStatus("terminate");
         }
     }
 

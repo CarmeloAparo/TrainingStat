@@ -199,15 +199,8 @@ public class DatabaseManager {
         }
     }
 
-    public void setStartedStatus(String trainingId) {
-        updateTrainingStatus(trainingId, "started");
-    }
 
-    public void setEndedStatus(String trainingId) {
-        updateTrainingStatus(trainingId, "ended");
-    }
-
-    private void updateTrainingStatus(String trainingId, String status) {
+    public void updateTrainingStatus(String trainingId, String status) {
         Map<String, Object> updates = new HashMap<>();
         updates.put("status", status);
         mDatabase.child("trainingSessions").child(trainingId).updateChildren(updates);
