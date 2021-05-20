@@ -1,33 +1,25 @@
 package it.unipi.dii.trainingstat.service;
 
-import android.Manifest;
 import android.app.Activity;
-import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
 import android.util.Log;
 
-import androidx.core.content.ContextCompat;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
-import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
+import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountingSteps;
 import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 
 
 public class TrainingStatSensorService implements SensorEventListener, ITrainingSensorService {
 
-    private final ICallBackForTrainingService activity;
+    private final ICallBackForCountingSteps activity;
     private SensorManager sensorManager;
     private Sensor stepSensor;
     private int stepCount;
 
-    public TrainingStatSensorService(ICallBackForTrainingService activity) throws NoStepCounterSensorAvailableException {
+    public TrainingStatSensorService(ICallBackForCountingSteps activity) throws NoStepCounterSensorAvailableException {
         this.activity = activity;
         sensorSetup();
     }

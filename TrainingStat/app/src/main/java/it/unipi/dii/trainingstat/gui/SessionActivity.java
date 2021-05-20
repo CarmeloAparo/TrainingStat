@@ -41,11 +41,11 @@ import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
 import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
 import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
-import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForTrainingService;
+import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountingSteps;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
 
 
-public class SessionActivity extends AppCompatActivity implements ICallBackForTrainingService {
+public class SessionActivity extends AppCompatActivity implements ICallBackForCountingSteps{
 
     private static final int ACTIVITY_PERMISSION_CODE = 0;
     private ActivityTrackerService _activityTrackerService;
@@ -89,6 +89,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
         String username = i.getStringExtra("username");
         _trainingSessionId = i.getStringExtra("trainingSessionId");
 
+        // genero la user session da inserire nella mia stessa training session
         generateUserSession(username);
 
         // inizializzo le textView
@@ -310,20 +311,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForTr
 
     }
 
-    @Override
-    public void notifyRunning() {
-        Toast.makeText(this, "RUNNING", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void notifyStill() {
-        Toast.makeText(this, "STILL", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void notifyWalking() {
-        Toast.makeText(this, "WALKING", Toast.LENGTH_SHORT).show();
-    }
 
 }
 
