@@ -2,6 +2,7 @@ package it.unipi.dii.trainingstat.gui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,7 +12,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -20,11 +20,13 @@ import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.entities.UserSession;
+import it.unipi.dii.trainingstat.utils.SessionResolver;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
+import it.unipi.dii.trainingstat.utils.exeptions.TrainingSessionNotFound;
 
 public class MenuActivity extends AppCompatActivity implements View.OnClickListener {
+    private final String TAG = "[MainActivity]";
 
-    private String Username;
     private User user;
 
     @Override
@@ -36,7 +38,6 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         user = (User) i.getSerializableExtra("User");
         TextView UsernameTextView = findViewById(R.id.menuUsernameTV);
         UsernameTextView.setText(user.getUsername());
-        Username = user.getUsername();
         int id = 0;
         for (Map<String, String> session : user.getPastSessions()) {
             Button button = new Button(this);
@@ -49,18 +50,18 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public TrainingSession startTrainingSession() {
+    public TrainingSession startNewTrainingSession() {
         user.setLastIncrementalID(user.getLastIncrementalID() + 1);
-        String id = Username + "_" + user.getLastIncrementalID();
-        TrainingSession trainingSession = new TrainingSession(id, Username, "started", TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()), null);
+        String id = user.getUsername() + "_" + user.getLastIncrementalID();
+        TrainingSession trainingSession = new TrainingSession(id, user.getUsername(), "started", TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()), null);
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.writeTrainingSession(trainingSession);
-        databaseManager.updateUserIncrementalID(Username, user.getLastIncrementalID());
+        databaseManager.updateUserIncrementalID(user.getUsername(), user.getLastIncrementalID());
         return trainingSession;
     }
 
     public void newCollectiveSessionButtonClicked(View v) {
-        TrainingSession trainingSession = startTrainingSession();
+        TrainingSession trainingSession = startNewTrainingSession();
         saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
         Intent i = new Intent(this, TrainerActivity.class);
         i.putExtra("User", user);
@@ -69,46 +70,48 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void newIndividualSessionButtonClicked(View v) {
-        TrainingSession trainingSession = startTrainingSession();
+        TrainingSession trainingSession = startNewTrainingSession();
         saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
-        Intent i = new Intent(this, SessionActivity.class);
-        i.putExtra("username", Username);
-        i.putExtra("trainingSessionId", trainingSession.getId());
-        startActivity(i);
+        startSessionActivity(trainingSession.getId());
     }
 
     public void joinCollectiveSessionButtonClicked(View v) {
         EditText sessionIdToJoinET = findViewById(R.id.menuInsertSessionIdET);
         String sessionIdToJoin = sessionIdToJoinET.getText().toString();
 
-        // Don't even bother the DB with an empty session id
-        if (sessionIdToJoin.equals("")) {
+        TrainingSession ts;
+        try {
+            ts = SessionResolver.getTrainingSession(sessionIdToJoin);
+        } catch (TrainingSessionNotFound trainingSessionNotFound) {
             Toast.makeText(this, "A session id must be provided", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, trainingSessionNotFound.getMessage());
+            return;
+        }
+
+        if(SessionResolver.isIndividualSession(ts)){
+            Toast.makeText(this, "<"+ts.getId()+"> is an individual session", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "tried to join an individual session <"+ts.getId()+"> with username <"+user.getUsername()+">");
+            return;
+        }
+        joinSession(ts);
+    }
+
+    private void joinSession(TrainingSession trainingSession) {
+        if (trainingSession == null || !trainingSession.getStatus().equals(TrainingSession.STATUS_STARTED)) {
+            Toast.makeText(this,
+                    "The session is ended. Please check the session id and try again!",
+                    Toast.LENGTH_SHORT).show();
         } else {
-            DatabaseManager db = new DatabaseManager();
-            Function<TrainingSession, Void> function = this::joinSession;
-            db.getTrainingSession(sessionIdToJoin, function);
+            saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
+            startSessionActivity(trainingSession.getId());
         }
     }
 
-    public Void joinSession(TrainingSession trainingSession) {
-        if (trainingSession == null || !trainingSession.getStatus().equals("started")) {
-            Toast.makeText(this,
-                    "The session doesn't exists or it is ended. Please check the session id and try again!",
-                    Toast.LENGTH_SHORT).show();
-        }
-        else {
-            UserSession session = new UserSession();
-            session.setUsername(Username);
-            DatabaseManager databaseManager = new DatabaseManager();
-            databaseManager.writeUserSession(trainingSession.getId(), session);
-            saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
-            Intent i = new Intent(this, SessionActivity.class);
-            i.putExtra("username", Username);
-            i.putExtra("trainingSessionId", trainingSession.getId());
-            startActivity(i);
-        }
-        return null;
+    private void startSessionActivity(String trainingSessionId){
+        Intent i = new Intent(this, SessionActivity.class);
+        i.putExtra("username", user.getUsername());
+        i.putExtra("trainingSessionId", trainingSessionId);
+        startActivity(i);
     }
 
     @Override
@@ -130,7 +133,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
             /*TODO:
             *  Avviare l'activity dei risultati invece che la session activity*/
             Intent i = new Intent(this, SessionActivity.class);
-            i.putExtra("username", Username);
+            i.putExtra("username", user.getUsername());
             i.putExtra("trainingSession", trainingSession);
             startActivity(i);
         }
