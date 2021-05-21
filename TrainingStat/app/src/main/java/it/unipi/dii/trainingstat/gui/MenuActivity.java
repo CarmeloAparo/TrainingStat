@@ -19,7 +19,6 @@ import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
-import it.unipi.dii.trainingstat.entities.UserSession;
 import it.unipi.dii.trainingstat.utils.SessionResolver;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
 import it.unipi.dii.trainingstat.utils.exeptions.TrainingSessionNotFound;
@@ -82,45 +81,41 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
     public void newIndividualSessionButtonClicked(View v) {
         TrainingSession trainingSession = startNewTrainingSession();
         saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
-        startSessionActivity(trainingSession.getId());
+        startSessionActivity(trainingSession);
     }
 
     public void joinCollectiveSessionButtonClicked(View v) {
         EditText sessionIdToJoinET = findViewById(R.id.menuInsertSessionIdET);
         String sessionIdToJoin = sessionIdToJoinET.getText().toString();
 
-        TrainingSession ts;
-        try {
-            ts = SessionResolver.getTrainingSession(sessionIdToJoin);
-        } catch (TrainingSessionNotFound trainingSessionNotFound) {
-            Toast.makeText(this, "A session id must be provided", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, trainingSessionNotFound.getMessage());
-            return;
-        }
-
-        if(SessionResolver.isIndividualSession(ts)){
-            Toast.makeText(this, "<"+ts.getId()+"> is an individual session", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "tried to join an individual session <"+ts.getId()+"> with username <"+user.getUsername()+">");
-            return;
-        }
-        joinSession(ts);
+        DatabaseManager db = new DatabaseManager();
+        db.getTrainingSession(sessionIdToJoin, this::joinSession);
     }
 
-    private void joinSession(TrainingSession trainingSession) {
-        if (trainingSession == null || !trainingSession.getStatus().equals(TrainingSession.STATUS_STARTED)) {
+    private Void joinSession(TrainingSession trainingSession) {
+        if(trainingSession == null){
+            Toast.makeText(this, "<"+trainingSession.getId()+"> not found", Toast.LENGTH_SHORT).show();
+        }
+        if(SessionResolver.isIndividualSession(trainingSession)){
+            Toast.makeText(this, "<"+trainingSession.getId()+"> is an individual session", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "tried to join an individual session <"+trainingSession.getId()+"> with username <"+user.getUsername()+">");
+            return null;
+        }
+        if (!trainingSession.getStatus().equals(TrainingSession.STATUS_STARTED)) {
             Toast.makeText(this,
                     "The session is ended. Please check the session id and try again!",
                     Toast.LENGTH_SHORT).show();
-        } else {
-            saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
-            startSessionActivity(trainingSession.getId());
+            return null;
         }
+        saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
+        startSessionActivity(trainingSession);
+        return null;
     }
 
-    private void startSessionActivity(String trainingSessionId){
+    private void startSessionActivity(TrainingSession trainingSession){
         Intent i = new Intent(this, SessionActivity.class);
         i.putExtra("username", user.getUsername());
-        i.putExtra("trainingSessionId", trainingSessionId);
+        i.putExtra("trainingSession", trainingSession);
         startActivity(i);
     }
 

@@ -65,6 +65,8 @@ public class TrainingSession implements Serializable {
     }
 
     public UserSession getSessionOfUser(String username){
+        if(userSessions == null)
+            userSessions = new HashMap<>();
         return userSessions.get(username);
     }
 

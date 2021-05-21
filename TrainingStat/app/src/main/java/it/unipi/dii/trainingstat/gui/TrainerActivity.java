@@ -59,27 +59,25 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
             databaseManager.removeUserSessionsListener(trainingSession.getId());
 
             // recupero tutti gli utenti sessions e vedere se hanno già tutti finito
-            try {
-                trainingSession = SessionResolver.getTrainingSession(trainingSession.getId());
-            } catch (TrainingSessionNotFound trainingSessionNotFound) {
-                Log.e(TAG, "Unable to retrieve training session");
-            }
-
-            String endDate = TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate());
-            trainingSession.setEndDate(endDate);
-            databaseManager.updateTrainingEndDate(trainingSession.getId(), endDate);
-
-            databaseManager.listenUserSessionsChanged(trainingSession.getId(), this::addUserSession);
-            databaseManager.updateTrainingStatus(trainingSession.getId(), TrainingSession.STATUS_TERMINATED);
-            trainingSession.setStatus(TrainingSession.STATUS_TERMINATED);
-
-
-            if(checkIfUserFinished()){
-                databaseManager.removeUserSessionsListener(trainingSession.getId());
-                computeAggregateresults();
-            }
-
+            databaseManager.getTrainingSession(trainingSession.getId(), this::finishStopActivities);
         }
+    }
+
+    public Void finishStopActivities(TrainingSession trainingSession){
+        String endDate = TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate());
+        trainingSession.setEndDate(endDate);
+        databaseManager.updateTrainingEndDate(trainingSession.getId(), endDate);
+
+        databaseManager.listenUserSessionsChanged(trainingSession.getId(), this::addUserSession);
+        databaseManager.updateTrainingStatus(trainingSession.getId(), TrainingSession.STATUS_TERMINATED);
+        trainingSession.setStatus(TrainingSession.STATUS_TERMINATED);
+
+
+        if(checkIfUserFinished()){
+            databaseManager.removeUserSessionsListener(trainingSession.getId());
+            computeAggregateresults();
+        }
+        return null;
     }
 
     private boolean checkIfUserFinished() {

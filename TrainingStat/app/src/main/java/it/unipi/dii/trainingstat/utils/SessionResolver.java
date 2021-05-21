@@ -63,24 +63,6 @@ public class SessionResolver {
         return userSession != null && (long) trainingSession.getUserSessions().keySet().size() == 1;
     }
 
-    public static TrainingSession getTrainingSession(String trainingSessionId) throws TrainingSessionNotFound {
-        if(trainingSessionId == null || trainingSessionId.equals("")){
-            throw new IllegalArgumentException("[trainingSessionId] is null or empty");
-        }
-
-        try {
-            TrainingSession ts = databaseManager.getTrainingSessionSync(trainingSessionId);
-            if(ts == null || ts.getId() == null || ts.getId().equals("")){
-                throw new TrainingSessionNotFound(trainingSessionId);
-            }
-            return ts;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new TrainingSessionNotFound(trainingSessionId);
-        }
-
-    }
-
     public static String getTrainerUsernameFromTrainingSession(String trainingSessionId){
         if(trainingSessionId == null || trainingSessionId.equals("")){
             throw new IllegalArgumentException("[trainingSessionId] is null or empty");

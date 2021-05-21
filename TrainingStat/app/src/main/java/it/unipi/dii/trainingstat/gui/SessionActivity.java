@@ -100,10 +100,11 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         // recupero username e session id
         Intent i = getIntent();
         String username = i.getStringExtra("username");
-        _trainingSessionId = i.getStringExtra("trainingSessionId");
+        TrainingSession trainingSession = (TrainingSession) i.getSerializableExtra("trainingSession");
+        _trainingSessionId = trainingSession.getId();
 
         // genero la user session da inserire nella mia stessa training session
-        initializeUserSession(username);
+        initializeUserSession(username,trainingSession);
 
         // aggiorno il cronometro e total steps nel caso sia rientrato nella sessione
         Long auxLong =  _userSession.getTotalActivityTime();
@@ -144,15 +145,10 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     }
 
 
-    private void initializeUserSession(String username) {
-        TrainingSession trainingSession;
+    private void initializeUserSession(String username, TrainingSession trainingSession) {
 
-        try {
-            trainingSession = SessionResolver.getTrainingSession(_trainingSessionId);
+        if(trainingSession != null){
             _userSession = trainingSession.getSessionOfUser(username);
-
-        } catch (TrainingSessionNotFound trainingSessionNotFound) {
-           Log.e(TAG, "Training session not found");
         }
 
         if(_userSession == null) {

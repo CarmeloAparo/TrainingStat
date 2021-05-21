@@ -81,6 +81,9 @@ public class DatabaseManager {
         trainingSession.setId(id);
     }
 
+    /*
+    non si può eseguire la .awat sul Main thread
+
     public TrainingSession getTrainingSessionSync(String id) throws Exception {
         Task<DataSnapshot> task = mDatabase.child("trainingSessions").child(id).get();
         DataSnapshot ds;
@@ -90,7 +93,7 @@ public class DatabaseManager {
             e.printStackTrace();
             throw new Exception("[getTrainingSessionSync] failed");
         }
-    }
+    }*/
 
     public void getTrainingSession(String id, Function<TrainingSession, Void> function){
         mDatabase.child("trainingSessions").child(id).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
