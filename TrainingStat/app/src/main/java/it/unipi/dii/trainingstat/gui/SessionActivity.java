@@ -34,6 +34,7 @@ import java.util.Map;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.UserSession;
 import it.unipi.dii.trainingstat.service.ActivityTrackerService;
 import it.unipi.dii.trainingstat.service.DummyService;
@@ -42,7 +43,9 @@ import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
 import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountingSteps;
+import it.unipi.dii.trainingstat.utils.SessionResolver;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
+import it.unipi.dii.trainingstat.utils.exeptions.TrainingSessionNotFound;
 
 
 public class SessionActivity extends AppCompatActivity implements ICallBackForCountingSteps{
@@ -54,7 +57,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private Chronometer _chronometer;
     private long _totalActivityTime; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
-    private Integer _totalSteps;
+    private int _totalSteps;
 
 
     private ActivityRecognitionClient _activityRecognitionClient;
@@ -100,7 +103,17 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _trainingSessionId = i.getStringExtra("trainingSessionId");
 
         // genero la user session da inserire nella mia stessa training session
-        generateUserSession(username);
+        initializeUserSession(username);
+
+        // aggiorno il cronometro e total steps nel caso sia rientrato nella sessione
+        Long auxLong =  _userSession.getTotalActivityTime();
+        _totalActivityTime = (auxLong == null) ? 0L : auxLong;
+        _chronometer.setBase(SystemClock.elapsedRealtime() - _totalActivityTime);
+
+        Integer auxInt = _userSession.getTotSteps();
+        _totalSteps = (auxInt == null)? 0 : auxInt;
+
+
 
         // inizializzo le textView
         TextView UsernameTextView = findViewById(R.id.sessionUsernameTV);
@@ -131,13 +144,24 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     }
 
 
+    private void initializeUserSession(String username) {
+        TrainingSession trainingSession;
 
+        try {
+            trainingSession = SessionResolver.getTrainingSession(_trainingSessionId);
+            _userSession = trainingSession.getSessionOfUser(username);
 
+        } catch (TrainingSessionNotFound trainingSessionNotFound) {
+           Log.e(TAG, "Training session not found");
+        }
 
-    private void generateUserSession(String username) {
-        DatabaseManager dm = new DatabaseManager();
-        _userSession = new UserSession(username, null, null, null, null, null, null, null, null, null, UserSession.STATUS_READY);
-        dm.writeUserSession(_trainingSessionId, _userSession);
+        if(_userSession == null) {
+            DatabaseManager dm = new DatabaseManager();
+            _userSession = new UserSession();
+            _userSession.setUsername(username);
+            _userSession.setStatus(UserSession.STATUS_READY);
+            dm.writeUserSession(_trainingSessionId, _userSession);
+        }
     }
 
     private void updateDbUserSession(){
@@ -298,7 +322,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     @Override
     public void passStepCounter(int steps) {
-        _totalSteps = steps;
+        _totalSteps += steps;
         TextView stepCounterTV = findViewById(R.id.sessionStepCounterTV);
         stepCounterTV.setText(String.valueOf(steps));
     }

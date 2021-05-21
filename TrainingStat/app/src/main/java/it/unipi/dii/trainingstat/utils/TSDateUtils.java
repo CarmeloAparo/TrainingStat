@@ -1,5 +1,9 @@
 package it.unipi.dii.trainingstat.utils;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -12,6 +16,7 @@ public class TSDateUtils {
         return Date.from(instant);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public static String DateToJsonString(Date date){
         Instant instant = date.toInstant();
         return instant.toString();

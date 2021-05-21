@@ -15,17 +15,16 @@ public class SessionResolver {
 
     private static final DatabaseManager databaseManager = new DatabaseManager();
 
-    public static int classifyUserSessionFromTrainingSessionId(String username, String trainingSessionId) throws TrainingSessionNotFound, UserSessionNotFound {
-        if(trainingSessionId == null || trainingSessionId ==""){
-            throw new IllegalArgumentException("[trainingSessionId] is null or empty");
+    // returns type of session and the state of it
+    public static int classifyUserSessionFromTrainingSessionId(String username, TrainingSession trainingSession) throws TrainingSessionNotFound, UserSessionNotFound {
+        if(trainingSession == null){
+            throw new IllegalArgumentException("[trainingSessionId] is null");
         }
         if(username == null || username ==""){
             throw new IllegalArgumentException("[username] is null or empty");
         }
 
-        TrainingSession trainingSession = getTrainingSession(trainingSessionId);
-
-        String trainer = getTrainerUsernameFromTrainingSession(trainingSessionId);
+        String trainer = getTrainerUsernameFromTrainingSession(trainingSession.getId());
 
         UserSession userSession = trainingSession.getSessionOfUser(username);
         if (userSession == null){

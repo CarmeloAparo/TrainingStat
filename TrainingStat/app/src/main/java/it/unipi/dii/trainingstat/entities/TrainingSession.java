@@ -61,7 +61,7 @@ public class TrainingSession implements Serializable {
         return userSessions.get(username);
     }
 
-    public void addUserSession(UserSession u) {
+    public void addOrUpdateUserSession(UserSession u) {
         String username = u.getUsername();
         u.setUsername(null);
         this.userSessions.put(username, u);

@@ -23,6 +23,7 @@ import it.unipi.dii.trainingstat.entities.UserSession;
 import it.unipi.dii.trainingstat.utils.SessionResolver;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
 import it.unipi.dii.trainingstat.utils.exeptions.TrainingSessionNotFound;
+import it.unipi.dii.trainingstat.utils.exeptions.UserSessionNotFound;
 
 public class MenuActivity extends AppCompatActivity implements View.OnClickListener {
     private final String TAG = "[MainActivity]";
@@ -41,7 +42,12 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         int id = 0;
         for (Map<String, String> session : user.getPastSessions()) {
             Button button = new Button(this);
-            button.setText(session.get("startDate"));
+            String date = TSDateUtils.DateInLocalTimezoneHumanReadable(
+                    TSDateUtils.JsonStringDateToDate(session.get("startDate"))
+            );
+
+            String text = session.get("id") + " " + date;
+            button.setText(text);
             button.setId(id);
             button.setOnClickListener(this);
             LinearLayout linearLayout = findViewById(R.id.pastSessionsLayout);
@@ -63,6 +69,10 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
     public void newCollectiveSessionButtonClicked(View v) {
         TrainingSession trainingSession = startNewTrainingSession();
         saveUserPastSession(trainingSession.getId(), trainingSession.getStartDate());
+        startTrainingActivity(trainingSession);
+    }
+
+    private void startTrainingActivity(TrainingSession trainingSession) {
         Intent i = new Intent(this, TrainerActivity.class);
         i.putExtra("User", user);
         i.putExtra("TrainingSession", trainingSession);
@@ -128,16 +138,40 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         if (trainingSession == null) {
             Toast.makeText(this, "An error occurred during past session selection",
                     Toast.LENGTH_SHORT).show();
+            return null;
         }
-        else {
-            /*TODO:
-            *  Avviare l'activity dei risultati invece che la session activity*/
-            Intent i = new Intent(this, SessionActivity.class);
-            i.putExtra("username", user.getUsername());
-            i.putExtra("trainingSession", trainingSession);
-            startActivity(i);
+
+        int status;
+        try {
+            status = SessionResolver.classifyUserSessionFromTrainingSessionId(user.getUsername(), trainingSession);
+        } catch (TrainingSessionNotFound | UserSessionNotFound trainingSessionNotFound) {
+            Log.e(TAG, trainingSessionNotFound.getMessage());
+            return null;
         }
-        return null;
+
+        switch(status){
+            case SessionResolver.RUNNING_TRAINING_SESSION:
+            case SessionResolver.TERMINATED_TRAINING_SESSION:
+                startTrainingActivity(trainingSession);
+                return null;
+
+            case SessionResolver.RUNNING_INDIVIDUAL_SESSION:
+            case SessionResolver.RUNNING_COLLECTIVE_SESSION:
+                Toast.makeText(this, "Sessione individuale/collettiva running", Toast.LENGTH_SHORT).show();
+                return null;
+
+            case SessionResolver.TERMINATED_INDIVIDUAL_SESSION:
+            case SessionResolver.TERMINATED_COLLECTIVE_SESSION:
+                Toast.makeText(this, "Sessione individuale/collettiva terminata: visualizzo risultati", Toast.LENGTH_SHORT).show();
+                return null;
+
+            default:
+                Log.e(TAG, "Unexpected user session status: " + String.valueOf(status));
+                Toast.makeText(this, "Unexpected user session status: " + String.valueOf(status), Toast.LENGTH_SHORT).show();
+                return null;
+        }
+
+
     }
 
     // aggiorno l'elenco delle past session dell'utente

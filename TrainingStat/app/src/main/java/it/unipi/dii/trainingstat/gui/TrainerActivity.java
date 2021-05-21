@@ -7,9 +7,10 @@ import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
 import it.unipi.dii.trainingstat.entities.UserSession;
+import it.unipi.dii.trainingstat.utils.SessionResolver;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
+import it.unipi.dii.trainingstat.utils.exeptions.TrainingSessionNotFound;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,12 +18,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Map;
 
 public class TrainerActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final String TAG = "[TrainerActivity]";
     private User user;
     private TrainingSession trainingSession;
     private DatabaseManager databaseManager;
@@ -49,19 +50,48 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
     public void startStopButtonClicked(View view) {
         Button button = (Button) view;
         if (button.getText().toString().equals(this.getResources().getString(R.string.start_button_text))) {
-            databaseManager.removeUserSessionsListener(trainingSession.getId());
+
             button.setText(R.string.stop_button_text);
         }
         else if(button.getText().toString().equals(this.getResources().getString(R.string.stop_button_text))) {
             button.setText(R.string.trainer_stopped_button);
+            // nessuno può più joinare
+            databaseManager.removeUserSessionsListener(trainingSession.getId());
+
+            // recupero tutti gli utenti sessions e vedere se hanno già tutti finito
+            try {
+                trainingSession = SessionResolver.getTrainingSession(trainingSession.getId());
+            } catch (TrainingSessionNotFound trainingSessionNotFound) {
+                Log.e(TAG, "Unable to retrieve training session");
+            }
 
             String endDate = TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate());
             trainingSession.setEndDate(endDate);
             databaseManager.updateTrainingEndDate(trainingSession.getId(), endDate);
+
             databaseManager.listenUserSessionsChanged(trainingSession.getId(), this::addUserSession);
-            databaseManager.updateTrainingStatus(trainingSession.getId(), "terminated");
-            trainingSession.setStatus("terminated");
+            databaseManager.updateTrainingStatus(trainingSession.getId(), TrainingSession.STATUS_TERMINATED);
+            trainingSession.setStatus(TrainingSession.STATUS_TERMINATED);
+
+
+            if(checkIfUserFinished()){
+                databaseManager.removeUserSessionsListener(trainingSession.getId());
+                computeAggregateresults();
+            }
+
         }
+    }
+
+    private boolean checkIfUserFinished() {
+
+        for( UserSession us: trainingSession.getUserSessions().values()){
+
+            if(!us.getStatus().equals(UserSession.STATUS_TERMINATED)){
+                return false;
+            }
+        }
+        return true;
+
     }
 
     public Void addUserButton(UserSession userSession) {
@@ -77,18 +107,15 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
     public Void addUserSession(UserSession userSession) {
         // controllare che tutte le sessioni figlie abbiano status terminated
 
-        trainingSession.addUserSession(userSession);
-        if (trainingSession.getUserSessions().keySet().size() == numPlayers) {
+        trainingSession.addOrUpdateUserSession(userSession);
+        if (checkIfUserFinished()) {
             databaseManager.removeUserSessionsListener(trainingSession.getId());
-            user.addPastSession(trainingSession.getId(), trainingSession.getStartDate());
-            databaseManager.addUserPastSessions(user.getUsername(), user.getPastSessions());
-            UserSession aggregateResults = computeAggregateresults();
-            databaseManager.writeUserSession(trainingSession.getId(), aggregateResults);
+            computeAggregateresults();
         }
         return null;
     }
 
-    private UserSession computeAggregateresults() {
+    private void computeAggregateresults() {
         UserSession aggregateResults = new UserSession();
         aggregateResults.setUsername(user.getUsername());
         int totSteps = 0;
@@ -106,7 +133,8 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         aggregateResults.setStillPerc(stillPerc / numPlayers);
         aggregateResults.setWalkPerc(walkPerc / numPlayers);
         aggregateResults.setRunPerc(runPerc / numPlayers);
-        return aggregateResults;
+        databaseManager.writeUserSession(trainingSession.getId(), aggregateResults);
+        addUserButton(aggregateResults);
     }
 
     @Override
@@ -118,6 +146,12 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
             Log.d("Test", "User session not arrived");
             return;
         }
+        if(!userSession.getStatus().equals(UserSession.STATUS_TERMINATED)){
+            Toast.makeText(this, "This session is not terminated yet", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Toast.makeText(this, "Visualizzazione risultati da implementare", Toast.LENGTH_SHORT).show();
         /*
         * TODO: Avviare l'activity dei risultati passando o la user session o tutta la training session
         * */
