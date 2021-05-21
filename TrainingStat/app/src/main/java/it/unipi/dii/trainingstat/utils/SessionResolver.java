@@ -17,10 +17,10 @@ public class SessionResolver {
 
     public static int classifyUserSessionFromTrainingSessionId(String username, String trainingSessionId) throws TrainingSessionNotFound, UserSessionNotFound {
         if(trainingSessionId == null || trainingSessionId ==""){
-            throw new IllegalArgumentException(trainingSessionId);
+            throw new IllegalArgumentException("[trainingSessionId] is null or empty");
         }
         if(username == null || username ==""){
-            throw new IllegalArgumentException(username);
+            throw new IllegalArgumentException("[username] is null or empty");
         }
 
         TrainingSession trainingSession = getTrainingSession(trainingSessionId);
@@ -54,13 +54,19 @@ public class SessionResolver {
         return RUNNING_TRAINING_SESSION;
     }
 
-    private static boolean isIndividualSession(TrainingSession ts){
-        String trainer = getTrainerUsernameFromTrainingSession(ts.getId());
-        UserSession userSession = ts.getSessionOfUser(trainer);
-        return userSession != null && ts.getUserSessions().keySet().stream().count() == 1;
+    public static boolean isIndividualSession(TrainingSession trainingSession){
+        if(trainingSession == null){
+            throw new IllegalArgumentException("[trainingSession] is null");
+        }
+        String trainer = getTrainerUsernameFromTrainingSession(trainingSession.getId());
+        UserSession userSession = trainingSession.getSessionOfUser(trainer);
+        return userSession != null && trainingSession.getUserSessions().keySet().stream().count() == 1;
     }
 
-    private static TrainingSession getTrainingSession(String trainingSessionId) throws TrainingSessionNotFound {
+    public static TrainingSession getTrainingSession(String trainingSessionId) throws TrainingSessionNotFound {
+        if(trainingSessionId == null || trainingSessionId ==""){
+            throw new IllegalArgumentException("[trainingSessionId] is null or empty");
+        }
         TrainingSession ts = new TrainingSession();
         databaseManager.getTrainingSession(trainingSessionId,ts::copyFrom);
         if(ts.getId() == null || ts.getId() ==""){
@@ -70,6 +76,9 @@ public class SessionResolver {
     }
 
     public static String getTrainerUsernameFromTrainingSession(String trainingSessionId){
+        if(trainingSessionId == null || trainingSessionId ==""){
+            throw new IllegalArgumentException("[trainingSessionId] is null or empty");
+        }
         String username = trainingSessionId.substring(0, trainingSessionId.lastIndexOf("_"));
         return username;
     }
