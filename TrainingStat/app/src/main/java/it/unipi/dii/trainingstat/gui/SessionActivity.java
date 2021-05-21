@@ -107,6 +107,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         initializeUserSession(username,trainingSession);
 
         // aggiorno il cronometro e total steps nel caso sia rientrato nella sessione
+        _chronometer = findViewById(R.id.sessionChronometer);
         Long auxLong =  _userSession.getTotalActivityTime();
         _totalActivityTime = (auxLong == null) ? 0L : auxLong;
         _chronometer.setBase(SystemClock.elapsedRealtime() - _totalActivityTime);
@@ -122,8 +123,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         UsernameTextView.setText(username);
         SessionIdTextView.setText(_trainingSessionId);
-
-        _chronometer = findViewById(R.id.sessionChronometer);
 
         _activityTrackerService = new ActivityTrackerService(this);
 

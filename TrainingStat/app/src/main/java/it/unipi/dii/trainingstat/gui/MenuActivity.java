@@ -152,7 +152,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
 
             case SessionResolver.RUNNING_INDIVIDUAL_SESSION:
             case SessionResolver.RUNNING_COLLECTIVE_SESSION:
-                Toast.makeText(this, "Sessione individuale/collettiva running", Toast.LENGTH_SHORT).show();
+                startSessionActivity(trainingSession);
                 return null;
 
             case SessionResolver.TERMINATED_INDIVIDUAL_SESSION:
