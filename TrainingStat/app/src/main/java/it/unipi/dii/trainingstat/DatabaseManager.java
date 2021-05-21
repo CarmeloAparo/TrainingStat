@@ -120,6 +120,9 @@ public class DatabaseManager {
                     entry.getValue().setUsername(entry.getKey());
                 }
             }
+            else{
+                trainingSession.setUserSessions(new HashMap<>());
+            }
         }
         return trainingSession;
     }

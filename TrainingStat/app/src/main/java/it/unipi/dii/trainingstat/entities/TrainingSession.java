@@ -13,6 +13,9 @@ public class TrainingSession implements Serializable {
     private String status;
     private String startDate;
     private String endDate;
+
+
+
     private Map<String, UserSession> userSessions;
 
     public TrainingSession(){}
@@ -55,6 +58,10 @@ public class TrainingSession implements Serializable {
 
     public Map<String, UserSession> getUserSessions() {
         return userSessions;
+    }
+
+    public void setUserSessions(Map<String, UserSession> userSessions) {
+        this.userSessions = userSessions;
     }
 
     public UserSession getSessionOfUser(String username){
