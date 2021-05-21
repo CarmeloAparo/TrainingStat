@@ -82,6 +82,14 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
+        if(!hasActivityRecognitionPermission())
+            requestActivityRecognitionPermissions();
+        else
+            finalizeOnCreate();
+    }
+
+    private void finalizeOnCreate(){
+
         _statusTV = findViewById(R.id.sessionStatusTV);
         _activityStatusTV = findViewById(R.id.sessionStatusActivityTV);
         _activityStatusTV.setText(getString(R.string.activity_status_unknown).toUpperCase());
@@ -119,7 +127,12 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
             _trainingService = new DummyService();
         }
+
     }
+
+
+
+
 
     private void generateUserSession(String username) {
         DatabaseManager dm = new DatabaseManager();
@@ -307,10 +320,13 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         if (grantResults.length != 0 /*&& requestCode == 0*/){
             for (int i = 0; i< grantResults.length; i++){
-                if (grantResults[i] == PackageManager.PERMISSION_GRANTED){
-                    Log.i("Permission request", permissions[i] + " granted");
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    Log.i("Permission request", permissions[i] + "not granted");
+                    finish();
                 }
+                Log.i("Permission request", permissions[i] + " granted");
             }
+            finalizeOnCreate();
         }
 
     }
