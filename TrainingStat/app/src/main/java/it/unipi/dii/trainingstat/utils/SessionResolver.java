@@ -1,5 +1,7 @@
 package it.unipi.dii.trainingstat.utils;
 
+import com.google.android.gms.tasks.Task;
+
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.UserSession;
@@ -66,12 +68,18 @@ public class SessionResolver {
         if(trainingSessionId == null || trainingSessionId ==""){
             throw new IllegalArgumentException("[trainingSessionId] is null or empty");
         }
-        TrainingSession ts = new TrainingSession();
-        databaseManager.getTrainingSession(trainingSessionId,ts::copyFrom);
-        if(ts.getId() == null || ts.getId() ==""){
+
+        try {
+            TrainingSession ts = databaseManager.getTrainingSessionSync(trainingSessionId);
+            if(ts == null || ts.getId() == null || ts.getId() ==""){
+                throw new TrainingSessionNotFound(trainingSessionId);
+            }
+            return ts;
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new TrainingSessionNotFound(trainingSessionId);
         }
-        return ts;
+
     }
 
     public static String getTrainerUsernameFromTrainingSession(String trainingSessionId){
