@@ -26,7 +26,7 @@ import it.unipi.dii.trainingstat.utils.exeptions.TrainingSessionNotFound;
 import it.unipi.dii.trainingstat.utils.exeptions.UserSessionNotFound;
 
 public class MenuActivity extends AppCompatActivity implements View.OnClickListener {
-    private final String TAG = "[MainActivity]";
+    private final String TAG = "[MenuActivity]";
 
     private User user;
 

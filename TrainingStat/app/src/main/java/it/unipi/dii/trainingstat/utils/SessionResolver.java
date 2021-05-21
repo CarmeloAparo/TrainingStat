@@ -22,34 +22,33 @@ public class SessionResolver {
         if(trainingSession == null){
             throw new IllegalArgumentException("[trainingSessionId] is null");
         }
-        if(username == null || username ==""){
+        if(username == null || username.equals("")){
             throw new IllegalArgumentException("[username] is null or empty");
         }
 
         String trainer = getTrainerUsernameFromTrainingSession(trainingSession.getId());
-
         UserSession userSession = trainingSession.getSessionOfUser(username);
-        if (userSession == null){
-            throw new UserSessionNotFound(username);
-        }
 
         if(isIndividualSession(trainingSession)){
-            if(userSession.getStatus() == UserSession.STATUS_TERMINATED){
+            if(userSession.getStatus().equals(UserSession.STATUS_TERMINATED)){
                 return TERMINATED_INDIVIDUAL_SESSION;
             }
             return RUNNING_INDIVIDUAL_SESSION;
         }
 
-        if(username != trainer){
+        if(!username.equals(trainer)){
             // COLLECTIVE_SESSION
-            if(userSession.getStatus() == UserSession.STATUS_TERMINATED){
+            if ( userSession == null){
+                throw new UserSessionNotFound("User: "+ username+" not found in session: " + trainingSession.getId());
+            }
+            if(userSession.getStatus().equals(UserSession.STATUS_TERMINATED)){
                 return TERMINATED_COLLECTIVE_SESSION;
             }
             return RUNNING_COLLECTIVE_SESSION;
         }
 
         //TRAINER_SESSION
-        if(trainingSession.getStatus() == TrainingSession.STATUS_TERMINATED){
+        if(trainingSession.getStatus().equals(TrainingSession.STATUS_TERMINATED)){
             return TERMINATED_TRAINING_SESSION;
         }
         return RUNNING_TRAINING_SESSION;
@@ -61,17 +60,17 @@ public class SessionResolver {
         }
         String trainer = getTrainerUsernameFromTrainingSession(trainingSession.getId());
         UserSession userSession = trainingSession.getSessionOfUser(trainer);
-        return userSession != null && trainingSession.getUserSessions().keySet().stream().count() == 1;
+        return userSession != null && (long) trainingSession.getUserSessions().keySet().size() == 1;
     }
 
     public static TrainingSession getTrainingSession(String trainingSessionId) throws TrainingSessionNotFound {
-        if(trainingSessionId == null || trainingSessionId ==""){
+        if(trainingSessionId == null || trainingSessionId.equals("")){
             throw new IllegalArgumentException("[trainingSessionId] is null or empty");
         }
 
         try {
             TrainingSession ts = databaseManager.getTrainingSessionSync(trainingSessionId);
-            if(ts == null || ts.getId() == null || ts.getId() ==""){
+            if(ts == null || ts.getId() == null || ts.getId().equals("")){
                 throw new TrainingSessionNotFound(trainingSessionId);
             }
             return ts;
@@ -83,7 +82,7 @@ public class SessionResolver {
     }
 
     public static String getTrainerUsernameFromTrainingSession(String trainingSessionId){
-        if(trainingSessionId == null || trainingSessionId ==""){
+        if(trainingSessionId == null || trainingSessionId.equals("")){
             throw new IllegalArgumentException("[trainingSessionId] is null or empty");
         }
         String username = trainingSessionId.substring(0, trainingSessionId.lastIndexOf("_"));
