@@ -4,6 +4,11 @@ import java.io.Serializable;
 import java.util.List;
 
 public class UserSession implements Serializable {
+    public static String STATUS_READY = "ready";
+    public static String STATUS_MONITORING = "monitoring";
+    public static String STATUS_PAUSED = "paused";
+    public static String STATUS_TERMINATED = "terminated";
+
     private String username;
     private Integer totSteps;
     private List<List<Double>> heatmap;

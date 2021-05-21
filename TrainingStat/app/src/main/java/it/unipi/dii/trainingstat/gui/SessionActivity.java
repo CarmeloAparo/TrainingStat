@@ -123,7 +123,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     private void generateUserSession(String username) {
         DatabaseManager dm = new DatabaseManager();
-        _userSession = new UserSession(username, null, null, null, null, null, null, null, null, null, "ready");
+        _userSession = new UserSession(username, null, null, null, null, null, null, null, null, null, UserSession.STATUS_READY);
         dm.writeUserSession(_trainingSessionId, _userSession);
     }
 
@@ -230,7 +230,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         _activityTrackerService.startTacking();
 
-        _userSession.setStatus("monitoring");
+        _userSession.setStatus(UserSession.STATUS_MONITORING);
         if(_userSession.getStartDate() == null){
             Date now = TSDateUtils.getCurrentUTCDate();
             String nowString = TSDateUtils.DateToJsonString(now);
@@ -256,7 +256,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _trainingService.unregisterSensors();
 
         _activityTrackerService.stopTacking();
-        _userSession.setStatus("paused");
+        _userSession.setStatus(UserSession.STATUS_PAUSED);
         updateDbUserSession();
     }
 
@@ -271,7 +271,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             // tengo conto della mancata classificazione dell'attività quando clicco pause
             _activityTrackerService.stopTacking();
         }
-        _userSession.setStatus("terminated");
+        _userSession.setStatus(UserSession.STATUS_TERMINATED);
         _userSession.setEndDate(TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()));
         updateDbUserSession();
         stopMonitoringActivityRecognition();

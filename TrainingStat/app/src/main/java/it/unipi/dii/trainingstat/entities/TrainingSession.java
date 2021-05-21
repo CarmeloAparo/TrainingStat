@@ -4,9 +4,10 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import it.unipi.dii.trainingstat.entities.UserSession;
-
 public class TrainingSession implements Serializable {
+    public static final String STATUS_STARTED = "started";
+    public static final String STATUS_TERMINATED = "terminated";
+
     private String id;
     private String trainer;
     private String status;
@@ -25,6 +26,19 @@ public class TrainingSession implements Serializable {
         this.userSessions = new HashMap<>();
     }
 
+    public Void copyFrom (TrainingSession ts){
+        if(ts == null){
+            return null;
+        }
+        this.id = ts.id;
+        this.trainer = ts.trainer;
+        this.status = ts.status;
+        this.startDate = ts.startDate;
+        this.endDate = ts.endDate;
+        this.userSessions = ts.userSessions;
+        return null;
+    }
+
     public String getId() { return id; }
 
     public String getTrainer() {
@@ -41,6 +55,10 @@ public class TrainingSession implements Serializable {
 
     public Map<String, UserSession> getUserSessions() {
         return userSessions;
+    }
+
+    public UserSession getSessionOfUser(String username){
+        return userSessions.get(username);
     }
 
     public void addUserSession(UserSession u) {
