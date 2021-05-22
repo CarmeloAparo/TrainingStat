@@ -34,6 +34,7 @@ import java.util.Map;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.UserSession;
 import it.unipi.dii.trainingstat.service.ActivityTrackerService;
 import it.unipi.dii.trainingstat.service.DummyService;
@@ -54,7 +55,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private Chronometer _chronometer;
     private long _totalActivityTime; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
-    private Integer _totalSteps;
+    private int _totalSteps;
 
 
     private ActivityRecognitionClient _activityRecognitionClient;
@@ -82,6 +83,14 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
+        if(!hasActivityRecognitionPermission())
+            requestActivityRecognitionPermissions();
+        else
+            finalizeOnCreate();
+    }
+
+    private void finalizeOnCreate(){
+
         _statusTV = findViewById(R.id.sessionStatusTV);
         _activityStatusTV = findViewById(R.id.sessionStatusActivityTV);
         _activityStatusTV.setText(getString(R.string.activity_status_unknown).toUpperCase());
@@ -89,10 +98,20 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         // recupero username e session id
         Intent i = getIntent();
         String username = i.getStringExtra("username");
-        _trainingSessionId = i.getStringExtra("trainingSessionId");
+        TrainingSession trainingSession = (TrainingSession) i.getSerializableExtra("trainingSession");
+        _trainingSessionId = trainingSession.getId();
 
         // genero la user session da inserire nella mia stessa training session
-        generateUserSession(username);
+        initializeUserSession(username,trainingSession);
+
+        // aggiorno il cronometro e total steps nel caso sia rientrato nella sessione
+        _chronometer = findViewById(R.id.sessionChronometer);
+        Long auxLong =  _userSession.getTotalActivityTime();
+        _totalActivityTime = (auxLong == null) ? 0L : auxLong;
+        _chronometer.setBase(SystemClock.elapsedRealtime() - _totalActivityTime);
+
+        Integer auxInt = _userSession.getTotSteps();
+        _totalSteps = (auxInt == null)? 0 : auxInt;
 
         // inizializzo le textView
         TextView UsernameTextView = findViewById(R.id.sessionUsernameTV);
@@ -100,8 +119,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         UsernameTextView.setText(username);
         SessionIdTextView.setText(_trainingSessionId);
-
-        _chronometer = findViewById(R.id.sessionChronometer);
 
         _activityTrackerService = new ActivityTrackerService(this);
 
@@ -119,12 +136,23 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
             _trainingService = new DummyService();
         }
+
     }
 
-    private void generateUserSession(String username) {
-        DatabaseManager dm = new DatabaseManager();
-        _userSession = new UserSession(username, null, null, null, null, null, null, null, null, null, "ready");
-        dm.writeUserSession(_trainingSessionId, _userSession);
+
+    private void initializeUserSession(String username, TrainingSession trainingSession) {
+
+        if(trainingSession != null){
+            _userSession = trainingSession.getSessionOfUser(username);
+        }
+
+        if(_userSession == null) {
+            DatabaseManager dm = new DatabaseManager();
+            _userSession = new UserSession();
+            _userSession.setUsername(username);
+            _userSession.setStatus(UserSession.STATUS_READY);
+            dm.writeUserSession(_trainingSessionId, _userSession);
+        }
     }
 
     private void updateDbUserSession(){
@@ -217,6 +245,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     private void startButtonClicked(Button startPauseButton) {
 
+        Button stopButton = findViewById(R.id.sessionStopButton);
+        stopButton.setEnabled(true);
+
         // aggiorno TV
         _statusTV.setText(R.string.monitoring);
         startPauseButton.setText(R.string.pause_button_text);
@@ -230,10 +261,10 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         _activityTrackerService.startTacking();
 
-        _userSession.setStatus("monitoring");
+        _userSession.setStatus(UserSession.STATUS_MONITORING);
         if(_userSession.getStartDate() == null){
             Date now = TSDateUtils.getCurrentUTCDate();
-            String nowString = TSDateUtils.DateToJsonString(now);
+            String nowString = TSDateUtils.DateToStringIsoDate(now);
             _userSession.setStartDate(nowString);
         }
 
@@ -256,7 +287,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _trainingService.unregisterSensors();
 
         _activityTrackerService.stopTacking();
-        _userSession.setStatus("paused");
+        _userSession.setStatus(UserSession.STATUS_PAUSED);
         updateDbUserSession();
     }
 
@@ -271,10 +302,20 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             // tengo conto della mancata classificazione dell'attività quando clicco pause
             _activityTrackerService.stopTacking();
         }
-        _userSession.setStatus("terminate");
-        _userSession.setEndDate(TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()));
+        _userSession.setStatus(UserSession.STATUS_TERMINATED);
+        _userSession.setEndDate(TSDateUtils.DateToStringIsoDate(TSDateUtils.getCurrentUTCDate()));
         updateDbUserSession();
         stopMonitoringActivityRecognition();
+
+        startResultActivity();
+        finish();
+    }
+
+    private void startResultActivity() {
+        Intent i = new Intent(this, ResultActivity.class);
+        i.putExtra("userSession", _userSession);
+        i.putExtra("trainingSessionId", _trainingSessionId);
+        startActivity(i);
     }
 
 
@@ -285,9 +326,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     @Override
     public void passStepCounter(int steps) {
-        _totalSteps = steps;
+        _totalSteps += steps;
         TextView stepCounterTV = findViewById(R.id.sessionStepCounterTV);
-        stepCounterTV.setText(String.valueOf(steps));
+        stepCounterTV.setText(String.valueOf(_totalSteps));
     }
 
     @Override
@@ -307,10 +348,13 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         if (grantResults.length != 0 /*&& requestCode == 0*/){
             for (int i = 0; i< grantResults.length; i++){
-                if (grantResults[i] == PackageManager.PERMISSION_GRANTED){
-                    Log.i("Permission request", permissions[i] + " granted");
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    Log.i("Permission request", permissions[i] + "not granted");
+                    finish();
                 }
+                Log.i("Permission request", permissions[i] + " granted");
             }
+            finalizeOnCreate();
         }
 
     }

@@ -17,7 +17,6 @@ public class TrainingStatSensorService implements SensorEventListener, ITraining
     private final ICallBackForCountingSteps activity;
     private SensorManager sensorManager;
     private Sensor stepSensor;
-    private int stepCount;
 
     public TrainingStatSensorService(ICallBackForCountingSteps activity) throws NoStepCounterSensorAvailableException {
         this.activity = activity;
@@ -40,7 +39,8 @@ public class TrainingStatSensorService implements SensorEventListener, ITraining
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor == stepSensor) {
-            stepCount += (int) event.values[0];
+
+            int stepCount = (int) event.values[0];
             activity.passStepCounter(stepCount);
         }
     }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="app_main_color_variant">#03A9F4</color>
+    <color name="app_main_color_variant">#FF03A9F4</color>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -11,4 +11,5 @@
     <color name="dark_green">#2D5C19</color>
     <color name="light_green">#67C83E</color>
     <color name="gentle_background">#F4F0E2</color>
+    <color name="red_heat_map">#FF5512</color>
 </resources>

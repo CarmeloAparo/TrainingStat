@@ -4,9 +4,14 @@ import java.io.Serializable;
 import java.util.List;
 
 public class UserSession implements Serializable {
+    public static String STATUS_READY = "ready";
+    public static String STATUS_MONITORING = "monitoring";
+    public static String STATUS_PAUSED = "paused";
+    public static String STATUS_TERMINATED = "terminated";
+
     private String username;
     private Integer totSteps;
-    private List<List<Double>> heatmap;
+    private int heatmap[][];
     private Double stillPerc;
     private Double walkPerc;
     private Double runPerc;
@@ -19,7 +24,7 @@ public class UserSession implements Serializable {
     // Empty constructor is needed by Firebase
     public UserSession() {}
 
-    public UserSession(String username, Integer totSteps, List<List<Double>> heatmap, Double stillPerc, Double walkPerc, Double runPerc, Double unknownPerc, String startDate, String endDate, Long totalActivityTime, String status) {
+    public UserSession(String username, Integer totSteps, int[][] heatmap, Double stillPerc, Double walkPerc, Double runPerc, Double unknownPerc, String startDate, String endDate, Long totalActivityTime, String status) {
         this.username = username;
         this.totSteps = totSteps;
         this.heatmap = heatmap;
@@ -41,7 +46,7 @@ public class UserSession implements Serializable {
         return totSteps;
     }
 
-    public List<List<Double>> getHeatmap() {
+    public int[][] getHeatmap() {
         return heatmap;
     }
 
@@ -63,7 +68,7 @@ public class UserSession implements Serializable {
         this.totSteps = totSteps;
     }
 
-    public void setHeatmap(List<List<Double>> heatmap) {
+    public void setHeatmap(int[][] heatmap) {
         this.heatmap = heatmap;
     }
 

@@ -1,5 +1,9 @@
 package it.unipi.dii.trainingstat.utils;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -12,12 +16,12 @@ public class TSDateUtils {
         return Date.from(instant);
     }
 
-    public static String DateToJsonString(Date date){
+    public static String DateToStringIsoDate(Date date){
         Instant instant = date.toInstant();
         return instant.toString();
     }
 
-    public static Date JsonStringDateToDate(String date){
+    public static Date StringIsoDateToDate(String date){
         Instant instant = Instant.parse(date);
         return Date.from(instant);
     }
@@ -27,5 +31,25 @@ public class TSDateUtils {
         df.setTimeZone(TimeZone.getDefault());
 
         return df.format(date);
+    }
+
+    public static String DateInLocalTimezoneHumanReadable(String isoDateString){
+        Date date = StringIsoDateToDate(isoDateString);
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setTimeZone(TimeZone.getDefault());
+
+        return df.format(date);
+    }
+
+    public static Long DurationBetweeenStringISODates(String startDate, String endDate) {
+
+        Long startLong = StringIsoDateToDate(startDate).getTime();
+        Long endLong = StringIsoDateToDate(endDate).getTime();
+
+        if (endLong > startLong){
+            return endLong - startLong;
+        }
+        return startLong - endLong;
+
     }
 }

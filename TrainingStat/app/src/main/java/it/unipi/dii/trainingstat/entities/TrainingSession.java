@@ -4,14 +4,18 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import it.unipi.dii.trainingstat.entities.UserSession;
-
 public class TrainingSession implements Serializable {
+    public static final String STATUS_STARTED = "started";
+    public static final String STATUS_TERMINATED = "terminated";
+
     private String id;
     private String trainer;
     private String status;
     private String startDate;
     private String endDate;
+
+
+
     private Map<String, UserSession> userSessions;
 
     public TrainingSession(){}
@@ -23,6 +27,19 @@ public class TrainingSession implements Serializable {
         this.startDate = startDate;
         this.endDate = endDate;
         this.userSessions = new HashMap<>();
+    }
+
+    public Void copyFrom (TrainingSession ts){
+        if(ts == null){
+            return null;
+        }
+        this.id = ts.id;
+        this.trainer = ts.trainer;
+        this.status = ts.status;
+        this.startDate = ts.startDate;
+        this.endDate = ts.endDate;
+        this.userSessions = ts.userSessions;
+        return null;
     }
 
     public String getId() { return id; }
@@ -43,7 +60,17 @@ public class TrainingSession implements Serializable {
         return userSessions;
     }
 
-    public void addUserSession(UserSession u) {
+    public void setUserSessions(Map<String, UserSession> userSessions) {
+        this.userSessions = userSessions;
+    }
+
+    public UserSession getSessionOfUser(String username){
+        if(userSessions == null)
+            userSessions = new HashMap<>();
+        return userSessions.get(username);
+    }
+
+    public void addOrUpdateUserSession(UserSession u) {
         String username = u.getUsername();
         u.setUsername(null);
         this.userSessions.put(username, u);
@@ -54,9 +81,7 @@ public class TrainingSession implements Serializable {
 
     public void setTrainer(String trainer) { this.trainer = trainer; }
 
-    public void setStartedStatus() { this.status = "started"; }
-
-    public void setEndedStatus() { this.status = "ended"; }
+    public void setStatus(String newStatus){ this.status = newStatus; }
 
     public void setStartDate(String startDate) { this.startDate = startDate; }
 

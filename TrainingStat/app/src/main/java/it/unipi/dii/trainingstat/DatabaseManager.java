@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -16,6 +17,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 import it.unipi.dii.trainingstat.entities.TrainingSession;
@@ -79,32 +81,53 @@ public class DatabaseManager {
         trainingSession.setId(id);
     }
 
+    /*
+    non si può eseguire la .awat sul Main thread
+
+    public TrainingSession getTrainingSessionSync(String id) throws Exception {
+        Task<DataSnapshot> task = mDatabase.child("trainingSessions").child(id).get();
+        DataSnapshot ds;
+        try {
+            return extractTrainingSessionFromDataSnapshot(Tasks.await(task), id);
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+            throw new Exception("[getTrainingSessionSync] failed");
+        }
+    }*/
+
     public void getTrainingSession(String id, Function<TrainingSession, Void> function){
         mDatabase.child("trainingSessions").child(id).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 if (!task.isSuccessful()) {
                     Log.e("Test", "Error on task", task.getException());
+                    return;
                 }
-                else {
-                    DataSnapshot d = task.getResult();
-                    TrainingSession trainingSession = d.getValue(TrainingSession.class);
-                    if(trainingSession != null) {
-                        trainingSession.setId(id);
-                        String trainer = id.substring(0, id.lastIndexOf("_"));
-                        trainingSession.setTrainer(trainer);
-                        // Set the username of the user sessions
-                        Map<String, UserSession> userSessions = trainingSession.getUserSessions();
-                        if (userSessions != null) {
-                            for (Map.Entry<String, UserSession> entry : userSessions.entrySet()) {
-                                entry.getValue().setUsername(entry.getKey());
-                            }
-                        }
-                    }
-                    function.apply(trainingSession);
-                }
+                DataSnapshot d = task.getResult();
+                TrainingSession trainingSession = extractTrainingSessionFromDataSnapshot(d, id);
+                function.apply(trainingSession);
             }
         });
+    }
+
+    private TrainingSession extractTrainingSessionFromDataSnapshot(DataSnapshot dataSnapshot, String id) {
+        TrainingSession trainingSession = dataSnapshot.getValue(TrainingSession.class);
+        if(trainingSession != null) {
+            trainingSession.setId(id);
+            String trainer = id.substring(0, id.lastIndexOf("_"));
+            trainingSession.setTrainer(trainer);
+            // Set the username of the user sessions
+            Map<String, UserSession> userSessions = trainingSession.getUserSessions();
+            if (userSessions != null) {
+                for (Map.Entry<String, UserSession> entry : userSessions.entrySet()) {
+                    entry.getValue().setUsername(entry.getKey());
+                }
+            }
+            else{
+                trainingSession.setUserSessions(new HashMap<>());
+            }
+        }
+        return trainingSession;
     }
 
     public void writeUserSession(String trainingSessionId, UserSession session) {
@@ -199,15 +222,8 @@ public class DatabaseManager {
         }
     }
 
-    public void setStartedStatus(String trainingId) {
-        updateTrainingStatus(trainingId, "started");
-    }
 
-    public void setEndedStatus(String trainingId) {
-        updateTrainingStatus(trainingId, "ended");
-    }
-
-    private void updateTrainingStatus(String trainingId, String status) {
+    public void updateTrainingStatus(String trainingId, String status) {
         Map<String, Object> updates = new HashMap<>();
         updates.put("status", status);
         mDatabase.child("trainingSessions").child(trainingId).updateChildren(updates);

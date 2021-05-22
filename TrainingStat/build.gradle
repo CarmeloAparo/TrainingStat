@@ -19,6 +19,8 @@ allprojects {
         google()
         mavenCentral()
         jcenter()
+        //heatmap
+        maven { url "https://jitpack.io" }
     }
 }
 
