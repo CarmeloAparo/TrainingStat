@@ -46,7 +46,7 @@ import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountin
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
 
 
-public class SessionActivity extends AppCompatActivity implements ICallBackForCountingSteps{
+public class SessionActivity extends AppCompatActivity implements ICallBackForCountingSteps {
 
     private static final int ACTIVITY_PERMISSION_CODE = 0;
     private ActivityTrackerService _activityTrackerService;
@@ -331,7 +331,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         stepCounterTV.setText(String.valueOf(_totalSteps));
     }
 
-    @Override
     public void askPermissions(String[] permissions, int permissionCode) {
         ActivityCompat.requestPermissions(this,
                 permissions,

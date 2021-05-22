@@ -5,5 +5,4 @@ import android.content.Context;
 public interface IBaseCallBack {
 
     Context getContext();
-    void askPermissions(String[] permissions, int permissionCode);
 }
