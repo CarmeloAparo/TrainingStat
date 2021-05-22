@@ -19,6 +19,7 @@ import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.User;
+import it.unipi.dii.trainingstat.entities.UserSession;
 import it.unipi.dii.trainingstat.utils.SessionResolver;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
 import it.unipi.dii.trainingstat.utils.exeptions.TrainingSessionNotFound;
@@ -51,7 +52,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         for (Map<String, String> session : user.getPastSessions()) {
             Button button = new Button(this);
             String date = TSDateUtils.DateInLocalTimezoneHumanReadable(
-                    TSDateUtils.JsonStringDateToDate(session.get("startDate"))
+                    TSDateUtils.StringIsoDateToDate(session.get("startDate"))
             );
 
             String text = session.get("id") + " " + date;
@@ -67,7 +68,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
     public TrainingSession startNewTrainingSession() {
         user.setLastIncrementalID(user.getLastIncrementalID() + 1);
         String id = user.getUsername() + "_" + user.getLastIncrementalID();
-        TrainingSession trainingSession = new TrainingSession(id, user.getUsername(), "started", TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()), null);
+        TrainingSession trainingSession = new TrainingSession(id, user.getUsername(), "started", TSDateUtils.DateToStringIsoDate(TSDateUtils.getCurrentUTCDate()), null);
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.writeTrainingSession(trainingSession);
         databaseManager.updateUserIncrementalID(user.getUsername(), user.getLastIncrementalID());
@@ -167,7 +168,8 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
 
             case SessionResolver.TERMINATED_INDIVIDUAL_SESSION:
             case SessionResolver.TERMINATED_COLLECTIVE_SESSION:
-                Toast.makeText(this, "Sessione individuale/collettiva terminata: visualizzo risultati", Toast.LENGTH_SHORT).show();
+                UserSession us = trainingSession.getSessionOfUser(user.getUsername());
+                startResultActivity(us,trainingSession.getId());
                 return null;
 
             default:
@@ -175,8 +177,13 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, "Unexpected user session status: " + String.valueOf(status), Toast.LENGTH_SHORT).show();
                 return null;
         }
+    }
 
-
+    private void startResultActivity(UserSession userSession, String trainingSessionId) {
+        Intent i = new Intent(this, ResultActivity.class);
+        i.putExtra("userSession", userSession);
+        i.putExtra("trainingSessionId", trainingSessionId);
+        startActivity(i);
     }
 
     // aggiorno l'elenco delle past session dell'utente

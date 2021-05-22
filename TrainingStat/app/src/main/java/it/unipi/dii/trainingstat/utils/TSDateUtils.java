@@ -16,18 +16,25 @@ public class TSDateUtils {
         return Date.from(instant);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public static String DateToJsonString(Date date){
+    public static String DateToStringIsoDate(Date date){
         Instant instant = date.toInstant();
         return instant.toString();
     }
 
-    public static Date JsonStringDateToDate(String date){
+    public static Date StringIsoDateToDate(String date){
         Instant instant = Instant.parse(date);
         return Date.from(instant);
     }
 
     public static String DateInLocalTimezoneHumanReadable(Date date){
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setTimeZone(TimeZone.getDefault());
+
+        return df.format(date);
+    }
+
+    public static String DateInLocalTimezoneHumanReadable(String isoDateString){
+        Date date = StringIsoDateToDate(isoDateString);
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         df.setTimeZone(TimeZone.getDefault());
 

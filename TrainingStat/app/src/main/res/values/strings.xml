@@ -22,6 +22,15 @@
     <string name="activity_status_unknown">unknown</string>
     <string name="trainer_user_tv">Players</string>
     <string name="trainer_stopped_button">Session concluded</string>
-
-
+    <string name="label_user">User</string>
+    <string name="label_session_id">Session id</string>
+    <string name="label_statistics">Statistics</string>
+    <string name="label_total_activity">Total activity time</string>
+    <string name="label_start_time">Start time</string>
+    <string name="label_end_time">End time</string>
+    <string name="label_total_steps">Total steps</string>
+    <string name="label_percentage_still">Still percentage</string>
+    <string name="label_percentage_walking">Walking percentage</string>
+    <string name="label_percentage_running">Running percentage</string>
+    <string name="label_percentage_unknown">Unknown activity</string>
 </resources>

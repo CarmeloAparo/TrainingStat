@@ -62,7 +62,7 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
 
     public Void finishStopActivities(TrainingSession trainingSession){
         _trainingSession = trainingSession;
-        String endDate = TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate());
+        String endDate = TSDateUtils.DateToStringIsoDate(TSDateUtils.getCurrentUTCDate());
         _trainingSession.setEndDate(endDate);
         databaseManager.updateTrainingEndDate(_trainingSession.getId(), endDate);
 

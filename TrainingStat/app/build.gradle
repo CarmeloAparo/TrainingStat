@@ -46,4 +46,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-database'
     //for activity recognition
     implementation 'com.google.android.gms:play-services-location:18.0.0'
+    //heatmap
+    implementation 'ca.heartlandsoftware:androidheatmap:1.2.0'
 }

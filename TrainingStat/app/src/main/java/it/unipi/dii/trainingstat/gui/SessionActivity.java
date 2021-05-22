@@ -43,9 +43,7 @@ import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
 import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountingSteps;
-import it.unipi.dii.trainingstat.utils.SessionResolver;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
-import it.unipi.dii.trainingstat.utils.exeptions.TrainingSessionNotFound;
 
 
 public class SessionActivity extends AppCompatActivity implements ICallBackForCountingSteps{
@@ -263,7 +261,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _userSession.setStatus(UserSession.STATUS_MONITORING);
         if(_userSession.getStartDate() == null){
             Date now = TSDateUtils.getCurrentUTCDate();
-            String nowString = TSDateUtils.DateToJsonString(now);
+            String nowString = TSDateUtils.DateToStringIsoDate(now);
             _userSession.setStartDate(nowString);
         }
 
@@ -302,16 +300,19 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             _activityTrackerService.stopTacking();
         }
         _userSession.setStatus(UserSession.STATUS_TERMINATED);
-        _userSession.setEndDate(TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()));
+        _userSession.setEndDate(TSDateUtils.DateToStringIsoDate(TSDateUtils.getCurrentUTCDate()));
         updateDbUserSession();
         stopMonitoringActivityRecognition();
 
-        Intent i = new Intent(this, ActivityResult.class);
-        i.putExtra("userSession", _userSession);
-        i.putExtra("sessionId", _trainingSessionId);
-        startActivity(i);
+        startResultActivity();
         finish();
+    }
 
+    private void startResultActivity() {
+        Intent i = new Intent(this, ResultActivity.class);
+        i.putExtra("userSession", _userSession);
+        i.putExtra("trainingSessionId", _trainingSessionId);
+        startActivity(i);
     }
 
 
