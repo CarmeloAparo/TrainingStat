@@ -129,6 +129,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    // called if a past session is clicked
     public void onClick(View v) {
         int buttonId = v.getId();
         Map<String, String> pastSession = user.getPastSessions().get(buttonId);

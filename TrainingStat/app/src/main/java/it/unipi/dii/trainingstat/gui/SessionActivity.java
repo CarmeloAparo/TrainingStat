@@ -305,6 +305,12 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _userSession.setEndDate(TSDateUtils.DateToJsonString(TSDateUtils.getCurrentUTCDate()));
         updateDbUserSession();
         stopMonitoringActivityRecognition();
+
+        Intent i = new Intent(this, ActivityResult.class);
+        i.putExtra("userSession", _userSession);
+        i.putExtra("sessionId", _trainingSessionId);
+        startActivity(i);
+
     }
 
 
