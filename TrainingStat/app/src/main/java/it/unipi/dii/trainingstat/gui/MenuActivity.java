@@ -38,7 +38,16 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         user = (User) i.getSerializableExtra("User");
         TextView UsernameTextView = findViewById(R.id.menuUsernameTV);
         UsernameTextView.setText(user.getUsername());
+
+        refreshPastSessionsLayout();
+
+    }
+
+    private void refreshPastSessionsLayout(){
         int id = 0;
+        LinearLayout linearLayout = findViewById(R.id.pastSessionsLayout);
+        linearLayout.removeAllViews();
+
         for (Map<String, String> session : user.getPastSessions()) {
             Button button = new Button(this);
             String date = TSDateUtils.DateInLocalTimezoneHumanReadable(
@@ -49,7 +58,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
             button.setText(text);
             button.setId(id);
             button.setOnClickListener(this);
-            LinearLayout linearLayout = findViewById(R.id.pastSessionsLayout);
+
             linearLayout.addView(button);
             id++;
         }
@@ -175,7 +184,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         user.addPastSession(sessionId, date);
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.addUserPastSessions(user.getUsername(), user.getPastSessions());
-
+        refreshPastSessionsLayout();
     }
 
 }

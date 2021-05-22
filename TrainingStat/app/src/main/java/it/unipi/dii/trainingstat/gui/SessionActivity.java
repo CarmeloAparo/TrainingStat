@@ -115,8 +115,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         Integer auxInt = _userSession.getTotSteps();
         _totalSteps = (auxInt == null)? 0 : auxInt;
 
-
-
         // inizializzo le textView
         TextView UsernameTextView = findViewById(R.id.sessionUsernameTV);
         TextView SessionIdTextView = findViewById(R.id.sessionSessionIdTV);
