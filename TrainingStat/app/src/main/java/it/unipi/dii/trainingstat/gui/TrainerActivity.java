@@ -39,25 +39,22 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         usernameTV.setText(user.getUsername());
         sessionIdTV.setText(_trainingSession.getId());
         Button startStopButton = findViewById(R.id.trainerStartStopButton);
-        startStopButton.setText(_trainingSession.getStatus());
+        startStopButton.setText(R.string.stop_button_text);
         databaseManager = new DatabaseManager();
         databaseManager.listenUserSessionsAdded(_trainingSession.getId(), this::addUserButton);
         numPlayers = 0;
     }
 
-    public void startStopButtonClicked(View view) {
+    public void stopButtonClicked(View view) {
         Button button = (Button) view;
-        if (button.getText().toString().equals(this.getResources().getString(R.string.start_button_text))) {
-            button.setText(R.string.stop_button_text);
-        }
-        else if(button.getText().toString().equals(this.getResources().getString(R.string.stop_button_text))) {
-            button.setText(R.string.trainer_stopped_button);
-            // nessuno può più joinare
-            databaseManager.removeUserSessionsListener(_trainingSession.getId());
 
-            // recupero tutti gli utenti sessions e vedere se hanno già tutti finito
-            databaseManager.getTrainingSession(_trainingSession.getId(), this::finishStopActivities);
-        }
+        button.setText(R.string.trainer_stopped_button);
+        // nessuno può più joinare
+        databaseManager.removeUserSessionsListener(_trainingSession.getId());
+
+        // recupero tutti gli utenti sessions e vedere se hanno già tutti finito
+        databaseManager.getTrainingSession(_trainingSession.getId(), this::finishStopActivities);
+
     }
 
     public Void finishStopActivities(TrainingSession trainingSession){
@@ -120,17 +117,20 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         double stillPerc = 0;
         double walkPerc = 0;
         double runPerc = 0;
+        double unkPerc = 0;
         for (Map.Entry<String, UserSession> entry : _trainingSession.getUserSessions().entrySet()) {
             UserSession userSession = entry.getValue();
             totSteps += userSession.getTotSteps();
             stillPerc += userSession.getStillPerc();
             walkPerc += userSession.getWalkPerc();
             runPerc += userSession.getRunPerc();
+            unkPerc += userSession.getUnknownPerc();
         }
-        aggregateResults.setTotSteps(totSteps / numPlayers);
+        aggregateResults.setTotSteps(totSteps);
         aggregateResults.setStillPerc(stillPerc / numPlayers);
         aggregateResults.setWalkPerc(walkPerc / numPlayers);
         aggregateResults.setRunPerc(runPerc / numPlayers);
+        aggregateResults.setUnknownPerc(unkPerc / numPlayers);
         databaseManager.writeUserSession(_trainingSession.getId(), aggregateResults);
         _trainingSession.addOrUpdateUserSession(aggregateResults);
         addUserButton(aggregateResults);
