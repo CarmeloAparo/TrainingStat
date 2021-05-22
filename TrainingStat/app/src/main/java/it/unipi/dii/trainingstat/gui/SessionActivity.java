@@ -310,6 +310,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         i.putExtra("userSession", _userSession);
         i.putExtra("sessionId", _trainingSessionId);
         startActivity(i);
+        finish();
 
     }
 
