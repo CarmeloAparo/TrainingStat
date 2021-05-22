@@ -68,8 +68,9 @@
                 android:layout_gravity="center_horizontal"
                 android:background="@drawable/soccer_field"
                 app:maxOpacity="255"
-                app:minOpacity="0"
-                android:layout_marginTop="10dp"/>
+                app:minOpacity="30"
+                android:layout_marginTop="10dp"
+                app:radius="250dp" />
 
             <TextView
                 android:id="@+id/tv_statistics"

@@ -245,6 +245,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     private void startButtonClicked(Button startPauseButton) {
 
+        Button stopButton = findViewById(R.id.sessionStopButton);
+        stopButton.setEnabled(true);
+
         // aggiorno TV
         _statusTV.setText(R.string.monitoring);
         startPauseButton.setText(R.string.pause_button_text);
