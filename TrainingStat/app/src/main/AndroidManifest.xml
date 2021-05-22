@@ -17,11 +17,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TrainingStat">
-        <activity android:name=".gui.TestActivity"></activity>
-
-        <service
-            android:name=".service.PositioningIntentService"
-            android:exported="false" />
 
         <activity
             android:name=".gui.SessionActivity"
