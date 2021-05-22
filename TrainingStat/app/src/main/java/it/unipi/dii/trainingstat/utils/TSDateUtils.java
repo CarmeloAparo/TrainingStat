@@ -40,4 +40,16 @@ public class TSDateUtils {
 
         return df.format(date);
     }
+
+    public static Long DurationBetweeenStringISODates(String startDate, String endDate) {
+
+        Long startLong = StringIsoDateToDate(startDate).getTime();
+        Long endLong = StringIsoDateToDate(endDate).getTime();
+
+        if (endLong > startLong){
+            return endLong - startLong;
+        }
+        return startLong - endLong;
+
+    }
 }

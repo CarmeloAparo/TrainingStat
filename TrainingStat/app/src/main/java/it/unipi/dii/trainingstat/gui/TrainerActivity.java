@@ -112,8 +112,10 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         UserSession aggregateResults = new UserSession();
         aggregateResults.setUsername(user.getUsername());
         aggregateResults.setStatus(UserSession.STATUS_TERMINATED);
-        aggregateResults.setStartDate(aggregateResults.getStartDate());
-        aggregateResults.setEndDate(aggregateResults.getEndDate());
+        aggregateResults.setStartDate(_trainingSession.getStartDate());
+        aggregateResults.setEndDate(_trainingSession.getEndDate());
+        aggregateResults.setTotalActivityTime(TSDateUtils.DurationBetweeenStringISODates(_trainingSession.getStartDate(), _trainingSession.getEndDate()));
+
         int totSteps = 0;
         double stillPerc = 0;
         double walkPerc = 0;
@@ -148,10 +150,16 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
             return;
         }
 
-        Toast.makeText(this, "Visualizzazione risultati da implementare", Toast.LENGTH_SHORT).show();
-        /*
-        * TODO: Avviare l'activity dei risultati passando o la user session o tutta la training session
-        * */
-        Log.d("Test", "User session arrived");
+        startResultActivity(userSession, _trainingSession.getId());
+
     }
+
+    private void startResultActivity(UserSession userSession, String trainingSessionId) {
+        Intent i = new Intent(this, ResultActivity.class);
+        i.putExtra("userSession", userSession);
+        i.putExtra("trainingSessionId", trainingSessionId);
+        startActivity(i);
+    }
+
+
 }
