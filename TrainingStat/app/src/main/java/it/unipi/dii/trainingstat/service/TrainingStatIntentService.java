@@ -33,13 +33,30 @@ public class TrainingStatIntentService extends IntentService {
             ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
 
             if (!detectedActivities.isEmpty()){
-                int type = detectedActivities.get(0).getType();
-                sendMessageToActivity(convertToString(type), type);
+
+                int type = DetectedActivity.UNKNOWN;
+                int confidence = 0;
 
                 for (DetectedActivity activity : detectedActivities) {
+
+                    int confidenceAnalyzed = activity.getConfidence();
+                    int typeAnalized = activity.getType();
+
+                    if(typeAnalized == DetectedActivity.STILL ||
+                            typeAnalized == DetectedActivity.WALKING ||
+                            typeAnalized == DetectedActivity.RUNNING){
+
+                        if(confidenceAnalyzed > confidence) {
+                            type = typeAnalized;
+                            confidence = confidenceAnalyzed;
+                        }
+                    }
+                    // loggo comunque l'attività vista nel for
                     String act = convertToString(activity.getType());
                     Log.d("TrainingStatIntentService", "Detected activity: <" + act + ">, " + activity.getConfidence());
                 }
+
+                sendMessageToActivity(convertToString(type), type);
             }
         }
     }

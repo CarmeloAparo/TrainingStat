@@ -328,7 +328,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     public void passStepCounter(int steps) {
         _totalSteps += steps;
         TextView stepCounterTV = findViewById(R.id.sessionStepCounterTV);
-        stepCounterTV.setText(String.valueOf(steps));
+        stepCounterTV.setText(String.valueOf(_totalSteps));
     }
 
     @Override
