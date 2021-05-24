@@ -12,7 +12,7 @@ public class PositionTrackerService implements IPositionService {
     }
     @Override
     public int[][] getHeatmap() {
-        return new int[0][];
+        return null;
     }
 
     @Override
