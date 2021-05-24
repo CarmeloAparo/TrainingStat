@@ -63,13 +63,13 @@
 
             <ca.hss.heatmaplib.HeatMap
                 android:id="@+id/heatmap"
-                android:layout_width="400dp"
-                android:layout_height="230dp"
+                android:layout_width="320dp"
+                android:layout_height="200dp"
                 android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
                 android:background="@drawable/soccer_field"
                 app:maxOpacity="255"
                 app:minOpacity="30"
-                android:layout_marginTop="10dp"
                 app:radius="250dp" />
 
             <TextView
