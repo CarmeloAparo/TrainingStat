@@ -240,6 +240,26 @@ public class DatabaseManager {
         updates.put("endDate", date);
         mDatabase.child("trainingSessions").child(trainingId).updateChildren(updates);
     }
+
+    public void getBeaconPositions(Function<Map<String, Map<String, Long>>, Void> function){
+        mDatabase.child("beaconPositions").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if (!task.isSuccessful()) {
+                    Log.e("DatabaseManager", "Error on task", task.getException());
+                }
+                else {
+                    DataSnapshot d = task.getResult();
+                    if(d.getValue() == null) {
+                        function.apply(null);
+                    } else {
+                        Map<String, Map<String, Long>> positions = (Map<String, Map<String, Long>>) d.getValue();
+                        function.apply(positions);
+                    }
+                }
+            }
+        });
+    }
 }
 
 /*
