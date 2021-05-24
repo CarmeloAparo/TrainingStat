@@ -7,7 +7,7 @@ public class PositionTrackerService implements IPositionService {
 
     private IBaseCallBack _activity;
 
-    PositionTrackerService(IBaseCallBack activity){
+    public PositionTrackerService(IBaseCallBack activity){
         _activity = activity;
     }
     @Override
