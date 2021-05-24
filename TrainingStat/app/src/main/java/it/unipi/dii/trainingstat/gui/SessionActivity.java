@@ -38,6 +38,7 @@ import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.UserSession;
 import it.unipi.dii.trainingstat.service.ActivityTrackerService;
 import it.unipi.dii.trainingstat.service.DummyService;
+import it.unipi.dii.trainingstat.service.PositionTrackerService;
 import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
 import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
@@ -48,15 +49,15 @@ import it.unipi.dii.trainingstat.utils.TSDateUtils;
 
 public class SessionActivity extends AppCompatActivity implements ICallBackForCountingSteps {
 
-    private static final int ACTIVITY_PERMISSION_CODE = 0;
-    private ActivityTrackerService _activityTrackerService;
-    private ITrainingSensorService _trainingService;
     private final String TAG = "[SessionActivity]";
-    private Chronometer _chronometer;
+    private static final int ACTIVITY_PERMISSION_CODE = 0;
     private long _totalActivityTime; // serve per tenere traccia del tempo contato prima di cliccare pausa
     private boolean chronoRunning;
     private int _totalSteps;
 
+    private ActivityTrackerService _activityTrackerService;
+    private PositionTrackerService _positionTrackerService;
+    private ITrainingSensorService _trainingService;
 
     private ActivityRecognitionClient _activityRecognitionClient;
     private PendingIntent _pendingIntent;
@@ -64,6 +65,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private UserSession _userSession;
     private String _trainingSessionId;
 
+    private Chronometer _chronometer;
     private TextView _activityStatusTV;
     private TextView _statusTV;
 
@@ -83,8 +85,8 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        if(!hasActivityRecognitionPermission())
-            requestActivityRecognitionPermissions();
+        if(!areAllPermissionGranted())
+            requestPermissions();
         else
             finalizeOnCreate();
     }
@@ -102,25 +104,17 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _trainingSessionId = trainingSession.getId();
 
         // genero la user session da inserire nella mia stessa training session
-        initializeUserSession(username,trainingSession);
+        getOrGenerateUserSession(username,trainingSession);
 
-        // aggiorno il cronometro e total steps nel caso sia rientrato nella sessione
-        _chronometer = findViewById(R.id.sessionChronometer);
-        Long auxLong =  _userSession.getTotalActivityTime();
-        _totalActivityTime = (auxLong == null) ? 0L : auxLong;
-        _chronometer.setBase(SystemClock.elapsedRealtime() - _totalActivityTime);
+        initializeGuiComponents(username);
 
-        Integer auxInt = _userSession.getTotSteps();
-        _totalSteps = (auxInt == null)? 0 : auxInt;
+        initializeServices();
 
-        // inizializzo le textView
-        TextView UsernameTextView = findViewById(R.id.sessionUsernameTV);
-        TextView SessionIdTextView = findViewById(R.id.sessionSessionIdTV);
+    }
 
-        UsernameTextView.setText(username);
-        SessionIdTextView.setText(_trainingSessionId);
-
+    private void initializeServices() {
         _activityTrackerService = new ActivityTrackerService(this);
+        _positionTrackerService = new PositionTrackerService(this);
 
         initializeActivityRecognition();
         startMonitoringActivityRecognition(1000);
@@ -136,11 +130,27 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
             _trainingService = new DummyService();
         }
-
     }
 
+    private void initializeGuiComponents(String username) {
+        // aggiorno il cronometro e total steps nel caso sia rientrato nella sessione
+        _chronometer = findViewById(R.id.sessionChronometer);
+        Long auxLong =  _userSession.getTotalActivityTime();
+        _totalActivityTime = (auxLong == null) ? 0L : auxLong;
+        _chronometer.setBase(SystemClock.elapsedRealtime() - _totalActivityTime);
 
-    private void initializeUserSession(String username, TrainingSession trainingSession) {
+        Integer auxInt = _userSession.getTotSteps();
+        _totalSteps = (auxInt == null)? 0 : auxInt;
+
+        // inizializzo le textView
+        TextView UsernameTextView = findViewById(R.id.sessionUsernameTV);
+        TextView SessionIdTextView = findViewById(R.id.sessionSessionIdTV);
+
+        UsernameTextView.setText(username);
+        SessionIdTextView.setText(_trainingSessionId);
+    }
+
+    private void getOrGenerateUserSession(String username, TrainingSession trainingSession) {
 
         if(trainingSession != null){
             _userSession = trainingSession.getSessionOfUser(username);
@@ -160,25 +170,20 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _userSession.setTotalActivityTime(_totalActivityTime);
         _userSession.setTotSteps(_totalSteps);
         Map<String, Double> percentages = _activityTrackerService.getPercentages();
-        // DEBUG stampo i risultati a mano
-        Log.d("SessionActivity", "Still precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_STILL));
-        Log.d("SessionActivity", "Walking precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
-        Log.d("SessionActivity", "Running precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
-        Log.d("SessionActivity", "Unknown precentage: " + percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
         _userSession.setStillPerc(percentages.get(TrainingStatIntentService.ACTIVITY_STILL));
         _userSession.setWalkPerc(percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
         _userSession.setRunPerc(percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
         _userSession.setUnknownPerc(percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
+        _userSession.setHeatmap(_positionTrackerService.getHeatmap());
         dm.writeUserSession(_trainingSessionId, _userSession);
     }
 
-
     private void initializeActivityRecognition(){
 
-        requestActivityRecognitionPermissions();
+        requestPermissions();
 
-        if(!hasActivityRecognitionPermission()){
-            Toast.makeText(this, "Activity recognition permission are necessary to use the app", Toast.LENGTH_SHORT).show();
+        if(!areAllPermissionGranted()){
+            Toast.makeText(this, "In order to use the app must been provided al permission needed", Toast.LENGTH_SHORT).show();
             finish();
         }
 
@@ -212,26 +217,39 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     }
 
 
-    private void requestActivityRecognitionPermissions() {
-        List<String> permissionsToRequest = new ArrayList<>();
+    private void requestPermissions() {
+        String[] permissionsToRequest = whatOfThosePermissionsAreNotGranted(getNeededPermission());
 
-        if (!hasActivityRecognitionPermission()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION);
-            }else{
-                permissionsToRequest.add("com.google.android.gms.permission.ACTIVITY_RECOGNITION");
+        if (permissionsToRequest.length > 0) {
+            this.askPermissions(permissionsToRequest, ACTIVITY_PERMISSION_CODE);
+        }
+    }
+
+    private String[] getNeededPermission(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return new String[]{
+                    Manifest.permission.ACTIVITY_RECOGNITION,
+                    Manifest.permission.ACCESS_FINE_LOCATION};
+        }else{
+            return new String[]{
+                    "com.google.android.gms.permission.ACTIVITY_RECOGNITION",
+                    Manifest.permission.ACCESS_FINE_LOCATION};
+        }
+    }
+
+    private String[] whatOfThosePermissionsAreNotGranted(String[] permissionNeeded) {
+        List<String> notGranted = new ArrayList<>();
+        for (String permission : permissionNeeded){
+            if(ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED){
+                notGranted.add(permission);
             }
         }
-
-        if (!permissionsToRequest.isEmpty()) {
-            this.askPermissions(permissionsToRequest.toArray(new String[0]), ACTIVITY_PERMISSION_CODE);
-        }
+        return notGranted.toArray(new String[notGranted.size()]);
     }
 
-    private boolean hasActivityRecognitionPermission() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED;
+    private boolean areAllPermissionGranted(){
+        return whatOfThosePermissionsAreNotGranted(getNeededPermission()).length == 0;
     }
-
 
     // calls the right handler method depending on the state of the button
     public void startPauseButtonClicked(View view) {
@@ -241,7 +259,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         else pauseButtonClicked(b);
         chronoRunning = !chronoRunning;
     }
-
 
     private void startButtonClicked(Button startPauseButton) {
 
@@ -271,7 +288,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         updateDbUserSession();
     }
 
-
     private void pauseButtonClicked(Button startPauseButton) {
 
         // aggiorno TV
@@ -290,9 +306,11 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _userSession.setStatus(UserSession.STATUS_PAUSED);
         updateDbUserSession();
     }
-
-
+    
     public void stopButtonClicked(View view) {
+        Button startPause = findViewById(R.id.sessionStartButton);
+        startPause.setEnabled(false);
+        _statusTV.setText(R.string.terminated);
 
         if(chronoRunning){
             _chronometer.stop();

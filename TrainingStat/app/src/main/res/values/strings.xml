@@ -13,6 +13,7 @@
     <string name="monitoring">Monitoring</string>
     <string name="ready">Ready</string>
     <string name="paused">Paused</string>
+    <string name="terminated">Terminated</string>
     <string name="insert_session_id_placeholder">Session_ID</string>
     <string name="status_text_view_default">Ready</string>
     <string name="step_sensor_unavailable_toast">Step sensor not available</string>

@@ -11,7 +11,7 @@ public class UserSession implements Serializable {
 
     private String username;
     private Integer totSteps;
-    private int heatmap[][];
+    private int[][] heatmap;
     private Double stillPerc;
     private Double walkPerc;
     private Double runPerc;

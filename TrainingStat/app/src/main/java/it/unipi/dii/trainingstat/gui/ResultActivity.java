@@ -63,6 +63,7 @@ public class ResultActivity extends AppCompatActivity {
         _walkingPercentageTV = findViewById(R.id.tv_percentage_walking);
         _runningPercentageTV = findViewById(R.id.tv_percentage_running);
         _unknownPercentageTV = findViewById(R.id.tv_percentage_unknown);
+        _heatMap = findViewById(R.id.heatmap);
 
         heatMapSetUp();
         loadStatisticsFromUserSession();
@@ -79,22 +80,42 @@ public class ResultActivity extends AppCompatActivity {
         _walkingPercentageTV.setText(String.format("%.2f",_userSession.getWalkPerc()) + " %");
         _runningPercentageTV.setText(String.format("%.2f",_userSession.getRunPerc()) + " %");
         _unknownPercentageTV.setText(String.format("%.2f",_userSession.getUnknownPerc()) + " %");
+        //TODO if solo epr debug visivo della heatmap, da rimuovere
+        int[][] tmpHeatmap = _userSession.getHeatmap();
+        if( tmpHeatmap == null || tmpHeatmap.length == 0)
+            tmpHeatmap = fakeHeatMap(6, 12);
+        heatmapSetData(tmpHeatmap);
+    }
+
+    private void heatmapSetData(int[][] newHeatmapData){
+        _heatMap.clearData();
+        if(newHeatmapData == null || newHeatmapData.length == 0){
+            Toast.makeText(this, "Heatmap data not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        int rowLen = newHeatmapData.length;
+        int columnLen = newHeatmapData[0].length;
+        double max = getMaxValueHeatMap(newHeatmapData, rowLen, columnLen);
+
+        float stepDimensionX = 1.0f / columnLen;
+        float stepOffsetX = stepDimensionX/2;
+        float stepDimensionY = 1.0f / rowLen;
+        float stepOffsetY = stepDimensionY/2;
+
+        for(int i = 0; i < rowLen; i++){
+            float y = (i+1)*stepDimensionY - stepOffsetY;
+
+            for(int j = 0; j< columnLen; j++){
+
+                float x = (j+1)*stepDimensionX - stepOffsetX;
+                double value = (newHeatmapData[i][j]/max) * 100;
+                HeatMap.DataPoint point = new HeatMap.DataPoint(x, y, value);
+                _heatMap.addData(point);
+            }
+        }
     }
 
     private void heatMapSetUp(){
-        _heatMap = findViewById(R.id.heatmap);
-        int[][] userHeatMap = _userSession.getHeatmap();
-
-        // TODO: mettere messaggio di errore; per ora ne creo una nuova
-        if(userHeatMap == null){
-            Toast.makeText(this, "La heatmap era null", Toast.LENGTH_SHORT).show();
-            userHeatMap = fakeHeatMap(5, 10);
-        }
-
-        int rowLen = userHeatMap.length;
-        int columnLen = userHeatMap[0].length;
-        double max = getMaxValueHeatMap(userHeatMap, rowLen, columnLen);
-
         _heatMap.setMinimum(0.0);
         _heatMap.setMaximum(100.0);
 
@@ -105,23 +126,6 @@ public class ResultActivity extends AppCompatActivity {
             colors.put(stop, color);
         }
         _heatMap.setColorStops(colors);
-
-        float stepDimentionX = 1.0f / columnLen;
-        float stepOffsetX = stepDimentionX/2;
-        float stepDimentionY = 1.0f / rowLen;
-        float stepOffsetY = stepDimentionY/2;
-
-        for(int i = 0; i < rowLen; i++){
-            float y = (i+1)*stepDimentionY - stepOffsetY;
-
-            for(int j = 0; j< columnLen; j++){
-
-                float x = (j+1)*stepDimentionX - stepOffsetX;
-                double value = (userHeatMap[i][j]/max) * 100;
-                HeatMap.DataPoint point = new HeatMap.DataPoint(x, y, value);
-                _heatMap.addData(point);
-            }
-        }
     }
 
     private double getMaxValueHeatMap(int[][] heatmap, int rows, int columns){
