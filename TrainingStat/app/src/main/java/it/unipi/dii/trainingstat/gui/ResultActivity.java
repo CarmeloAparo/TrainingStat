@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -81,10 +82,11 @@ public class ResultActivity extends AppCompatActivity {
         _runningPercentageTV.setText(String.format("%.2f",_userSession.getRunPerc()) + " %");
         _unknownPercentageTV.setText(String.format("%.2f",_userSession.getUnknownPerc()) + " %");
         //TODO if solo epr debug visivo della heatmap, da rimuovere
-        int[][] tmpHeatmap = _userSession.getHeatmap();
-        if( tmpHeatmap == null || tmpHeatmap.length == 0)
-            tmpHeatmap = fakeHeatMap(6, 12);
-        heatmapSetData(tmpHeatmap);
+        List<List<Integer>> tmpHeatmap = _userSession.getHeatmap();
+        int[][] tmpMatrix = UserSession.heatmapToMatrixInt(tmpHeatmap);
+        if( tmpHeatmap == null || tmpHeatmap.size() == 0)
+            tmpMatrix = fakeHeatMap(6, 12);
+        heatmapSetData(tmpMatrix);
     }
 
     private void heatmapSetData(int[][] newHeatmapData){
@@ -140,10 +142,10 @@ public class ResultActivity extends AppCompatActivity {
         return max;
     }
 
-    private int [][] fakeHeatMap(int rows, int columns){
+    private int[][] fakeHeatMap(int rows, int columns){
 
         Random random = new Random();
-        int result[][] = new int[rows][columns];
+        int[][] result = new int[rows][columns];
         int aux = 0;
 
         for(int i = 0; i < rows; i++){

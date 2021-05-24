@@ -174,7 +174,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _userSession.setWalkPerc(percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
         _userSession.setRunPerc(percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
         _userSession.setUnknownPerc(percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
-        _userSession.setHeatmap(_positionTrackerService.getHeatmap());
+        int[][] matrixHeatmap = _positionTrackerService.getHeatmap();
+        List<List<Integer>> heatmap = UserSession.matrixIntToHeatmap(matrixHeatmap);
+        _userSession.setHeatmap(heatmap);
         dm.writeUserSession(_trainingSessionId, _userSession);
     }
 

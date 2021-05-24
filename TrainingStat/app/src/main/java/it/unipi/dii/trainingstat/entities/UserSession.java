@@ -1,6 +1,7 @@
 package it.unipi.dii.trainingstat.entities;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserSession implements Serializable {
@@ -11,7 +12,7 @@ public class UserSession implements Serializable {
 
     private String username;
     private Integer totSteps;
-    private int[][] heatmap;
+    private List<List<Integer>> heatmap;
     private Double stillPerc;
     private Double walkPerc;
     private Double runPerc;
@@ -24,7 +25,7 @@ public class UserSession implements Serializable {
     // Empty constructor is needed by Firebase
     public UserSession() {}
 
-    public UserSession(String username, Integer totSteps, int[][] heatmap, Double stillPerc, Double walkPerc, Double runPerc, Double unknownPerc, String startDate, String endDate, Long totalActivityTime, String status) {
+    public UserSession(String username, Integer totSteps, List<List<Integer>> heatmap, Double stillPerc, Double walkPerc, Double runPerc, Double unknownPerc, String startDate, String endDate, Long totalActivityTime, String status) {
         this.username = username;
         this.totSteps = totSteps;
         this.heatmap = heatmap;
@@ -46,7 +47,7 @@ public class UserSession implements Serializable {
         return totSteps;
     }
 
-    public int[][] getHeatmap() {
+    public List<List<Integer>> getHeatmap() {
         return heatmap;
     }
 
@@ -68,7 +69,7 @@ public class UserSession implements Serializable {
         this.totSteps = totSteps;
     }
 
-    public void setHeatmap(int[][] heatmap) {
+    public void setHeatmap(List<List<Integer>> heatmap) {
         this.heatmap = heatmap;
     }
 
@@ -123,4 +124,40 @@ public class UserSession implements Serializable {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public static int[][] heatmapToMatrixInt(List<List<Integer>> heatmap){
+        int[][] matrix = null;
+        if(heatmap == null){
+            return null;
+        }
+        int r = 0;
+        for(List<Integer> row: heatmap){
+            int c = 0;
+            for(Integer rowNumber: row){
+                if(matrix == null){
+                    matrix = new int[heatmap.size()][row.size()];
+                }
+                matrix[r][c] = rowNumber;
+                ++c;
+            }
+            ++r;
+        }
+        return matrix;
+    }
+
+    public static List<List<Integer>> matrixIntToHeatmap(int[][] matrix){
+        if(matrix == null){
+            return null;
+        }
+        List<List<Integer>> heatmap = new ArrayList<>();
+        for(int r = 0; r< matrix.length; ++r){
+            List<Integer> row = new ArrayList<>();
+            for(int c = 0; c< matrix[0].length; ++c){
+                row.add(matrix[r][c]);
+            }
+            heatmap.add(row);
+        }
+        return heatmap;
+    }
+
 }
