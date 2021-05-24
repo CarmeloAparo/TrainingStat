@@ -22,60 +22,82 @@ import java.util.Map;
 
 public class TrainerActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "[TrainerActivity]";
-    private User user;
+    private User _user;
     private TrainingSession _trainingSession;
-    private DatabaseManager databaseManager;
-    private int numPlayers;
+    private DatabaseManager _databaseManager;
+    private int _numPlayers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trainer);
         Intent intent = getIntent();
-        user = (User) intent.getSerializableExtra("User");
+        _user = (User) intent.getSerializableExtra("User");
         _trainingSession = (TrainingSession) intent.getSerializableExtra("TrainingSession");
         TextView usernameTV = findViewById(R.id.trainerUsernameTV);
         TextView sessionIdTV = findViewById(R.id.trainerSessionIdTV);
-        usernameTV.setText(user.getUsername());
+        usernameTV.setText(_user.getUsername());
         sessionIdTV.setText(_trainingSession.getId());
-        Button startStopButton = findViewById(R.id.trainerStartStopButton);
-        startStopButton.setText(R.string.stop_button_text);
-        databaseManager = new DatabaseManager();
-        databaseManager.listenUserSessionsAdded(_trainingSession.getId(), this::addUserButton);
-        numPlayers = 0;
+        Button StopButton = findViewById(R.id.trainerStartStopButton);
+
+
+        if (_trainingSession.getSessionOfUser(_user.getUsername()) != null){
+            // i risultati aggregari sono già stati calcolati -> sessione già terminata
+            disableButton(StopButton);
+
+            // devo comunque mostrare i Button degli utenti
+            for(UserSession us: _trainingSession.getUserSessions().values()){
+                addUserButton(us);
+            }
+        }
+        else{
+            // da fare se la sessione è nuova o non ancora conclusa
+            StopButton.setText(R.string.stop_button_text);
+            _databaseManager = new DatabaseManager();
+            _databaseManager.listenUserSessionsAdded(_trainingSession.getId(), this::addUserButton);
+            _numPlayers = 0;
+        }
     }
 
     public void stopButtonClicked(View view) {
+        // stop button cannot be pressed again
         Button button = (Button) view;
+        disableButton(button);
 
-        button.setText(R.string.trainer_stopped_button);
         // nessuno può più joinare
-        databaseManager.removeUserSessionsListener(_trainingSession.getId());
+        _databaseManager.removeUserSessionsListener(_trainingSession.getId());
 
         // recupero tutti gli utenti sessions e vedere se hanno già tutti finito
-        databaseManager.getTrainingSession(_trainingSession.getId(), this::finishStopActivities);
+        _databaseManager.getTrainingSession(_trainingSession.getId(), this::finishStopActivities);
 
     }
+
+    private void disableButton(Button stopButton){
+        stopButton.setText(R.string.trainer_stopped_button);
+        stopButton.setEnabled(false);
+    }
+
 
     public Void finishStopActivities(TrainingSession trainingSession){
         _trainingSession = trainingSession;
         String endDate = TSDateUtils.DateToStringIsoDate(TSDateUtils.getCurrentUTCDate());
         _trainingSession.setEndDate(endDate);
-        databaseManager.updateTrainingEndDate(_trainingSession.getId(), endDate);
+        _databaseManager.updateTrainingEndDate(_trainingSession.getId(), endDate);
 
-        databaseManager.listenUserSessionsChanged(_trainingSession.getId(), this::addUserSession);
-        databaseManager.updateTrainingStatus(_trainingSession.getId(), TrainingSession.STATUS_TERMINATED);
+        _databaseManager.listenUserSessionsChanged(_trainingSession.getId(), this::addUserSession);
+        _databaseManager.updateTrainingStatus(_trainingSession.getId(), TrainingSession.STATUS_TERMINATED);
         trainingSession.setStatus(TrainingSession.STATUS_TERMINATED);
 
-
         if(checkIfUserFinished()){
-            databaseManager.removeUserSessionsListener(trainingSession.getId());
-            computeAggregateresults();
+            _databaseManager.removeUserSessionsListener(trainingSession.getId());
+            computeAggregateResults();
         }
         return null;
     }
 
     private boolean checkIfUserFinished() {
+        if(_trainingSession.getUserSessions().isEmpty()) return true;
+
         for( UserSession us: _trainingSession.getUserSessions().values()){
             if(!us.getStatus().equals(UserSession.STATUS_TERMINATED)){
                 return false;
@@ -90,7 +112,7 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         button.setOnClickListener(this);
         LinearLayout linearLayout = findViewById(R.id.trainerUsersLinearLayout);
         linearLayout.addView(button);
-        numPlayers++;
+        _numPlayers++;
         return null;
     }
 
@@ -99,15 +121,15 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
 
         _trainingSession.addOrUpdateUserSession(userSession);
         if (checkIfUserFinished()) {
-            databaseManager.removeUserSessionsListener(_trainingSession.getId());
-            computeAggregateresults();
+            _databaseManager.removeUserSessionsListener(_trainingSession.getId());
+            computeAggregateResults();
         }
         return null;
     }
 
-    private void computeAggregateresults() {
+    private void computeAggregateResults() {
         UserSession aggregateResults = new UserSession();
-        aggregateResults.setUsername(user.getUsername());
+        aggregateResults.setUsername(_user.getUsername());
         aggregateResults.setStatus(UserSession.STATUS_TERMINATED);
         aggregateResults.setStartDate(_trainingSession.getStartDate());
         aggregateResults.setEndDate(_trainingSession.getEndDate());
@@ -119,6 +141,8 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
         double runPerc = 0;
         double unkPerc = 0;
         for (Map.Entry<String, UserSession> entry : _trainingSession.getUserSessions().entrySet()) {
+
+            if (entry == null) break; // la sessione non aveva utenti
             UserSession userSession = entry.getValue();
             totSteps += userSession.getTotSteps();
             stillPerc += userSession.getStillPerc();
@@ -126,12 +150,13 @@ public class TrainerActivity extends AppCompatActivity implements View.OnClickLi
             runPerc += userSession.getRunPerc();
             unkPerc += userSession.getUnknownPerc();
         }
+        _numPlayers = (_numPlayers == 0) ? 1: _numPlayers; // evito divisione per 0
         aggregateResults.setTotSteps(totSteps);
-        aggregateResults.setStillPerc(stillPerc / numPlayers);
-        aggregateResults.setWalkPerc(walkPerc / numPlayers);
-        aggregateResults.setRunPerc(runPerc / numPlayers);
-        aggregateResults.setUnknownPerc(unkPerc / numPlayers);
-        databaseManager.writeUserSession(_trainingSession.getId(), aggregateResults);
+        aggregateResults.setStillPerc(stillPerc / _numPlayers);
+        aggregateResults.setWalkPerc(walkPerc / _numPlayers);
+        aggregateResults.setRunPerc(runPerc / _numPlayers);
+        aggregateResults.setUnknownPerc(unkPerc / _numPlayers);
+        _databaseManager.writeUserSession(_trainingSession.getId(), aggregateResults);
         _trainingSession.addOrUpdateUserSession(aggregateResults);
         addUserButton(aggregateResults);
     }
