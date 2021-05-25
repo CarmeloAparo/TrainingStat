@@ -125,8 +125,9 @@ public class PositionTrackerService implements IPositionService {
     }
 
     // Filters the beacons returning a list that contains only relevant beacons ordered per decreasing RSSI
-    private List<IBeaconDevice> filterBeacons(List<IBeaconDevice> iBeacons) {
+    private List<IBeaconDevice> filterBeacons(List<IBeaconDevice> scanningIBeacons) {
         // order the beacons in the update with RSSI in descending order
+        List<IBeaconDevice> iBeacons = new ArrayList<>(scanningIBeacons);
         iBeacons.sort(Comparator.comparing(IBeaconDevice::getRssi).reversed());
         List<IBeaconDevice> filteredBeacons = new ArrayList<>();
 
