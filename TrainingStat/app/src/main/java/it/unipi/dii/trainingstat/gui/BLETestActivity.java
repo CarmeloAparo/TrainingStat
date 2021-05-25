@@ -8,7 +8,6 @@ import androidx.core.content.ContextCompat;
 import ca.hss.heatmaplib.HeatMap;
 import it.unipi.dii.trainingstat.DatabaseManager;
 import it.unipi.dii.trainingstat.R;
-import it.unipi.dii.trainingstat.services.BeaconService;
 
 import android.Manifest;
 import android.content.Intent;
