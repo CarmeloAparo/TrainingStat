@@ -25,21 +25,21 @@ import it.unipi.dii.trainingstat.service.interfaces.IPositionService;
 import it.unipi.dii.trainingstat.service.interfaces.callback.IBaseCallBack;
 
 public class PositionTrackerService implements IPositionService {
-    private ProximityManager proximityManager;
-    private final int scanningInterval = 500;   // ms
+    private ProximityManager _proximityManager;
+    private final int _scanningInterval = 500;   // ms
     private IBaseCallBack _activity;
-    private int[][] positionMatrix;
-    private Map<String, Map<String, Long>> beaconPositions;
-    private final int firstBeaconTH = 10;
-    private final int secondBeaconTH = 7;
-    private final int thirdBeaconTH = 7;
+    private int[][] _positionMatrix;
+    private Map<String, Map<String, Long>> _beaconPositions;
+    private final int _firstBeaconTH = 10;
+    private final int _secondBeaconTH = 7;
+    private final int _thirdBeaconTH = 7;
 
     public PositionTrackerService(IBaseCallBack activity){
         _activity = activity;
         configureProximityManager();
         setupBeaconListener();
-        positionMatrix = null;
-        beaconPositions = null;
+        _positionMatrix = null;
+        _beaconPositions = null;
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.getBeaconPositions(this::setBeaconPosition);
     }
@@ -49,15 +49,15 @@ public class PositionTrackerService implements IPositionService {
             Toast.makeText(_activity.getContext(), "Beacon positions not found", Toast.LENGTH_SHORT).show();
             return null;
         }
-        beaconPositions = positions;
+        _beaconPositions = positions;
         Long rowMax = 0l;
         Long colMax = 0l;
-        for (Map.Entry<String, Map<String, Long>> beaconPosition : beaconPositions.entrySet()) {
+        for (Map.Entry<String, Map<String, Long>> beaconPosition : _beaconPositions.entrySet()) {
             rowMax = Long.max(rowMax, beaconPosition.getValue().get("row"));
             colMax = Long.max(colMax, beaconPosition.getValue().get("col"));
         }
-        positionMatrix = new int[rowMax.intValue() + 1][colMax.intValue() + 1];
-        for (int[] row : positionMatrix) {
+        _positionMatrix = new int[rowMax.intValue() + 1][colMax.intValue() + 1];
+        for (int[] row : _positionMatrix) {
             Arrays.fill(row, 0);
         }
         return null;
@@ -65,7 +65,7 @@ public class PositionTrackerService implements IPositionService {
 
     @Override
     public int[][] getHeatmap() {
-        return positionMatrix;
+        return _positionMatrix;
     }
 
     @Override
@@ -80,32 +80,32 @@ public class PositionTrackerService implements IPositionService {
 
     private void configureProximityManager() {
         KontaktSDK.initialize("wLvvNlIMqZdHvvTVrhsgmAySANYdDplM");
-        proximityManager = ProximityManagerFactory.create(_activity.getContext());
-        proximityManager.configuration()
+        _proximityManager = ProximityManagerFactory.create(_activity.getContext());
+        _proximityManager.configuration()
                 .scanMode(ScanMode.LOW_LATENCY)     // Scan performance (Balanced, Low Latency or Low Power)
                 .scanPeriod(ScanPeriod.RANGING)     // Scan duration and intervals
                 .activityCheckConfiguration(ActivityCheckConfiguration.MINIMAL)
-                .deviceUpdateCallbackInterval(scanningInterval);
+                .deviceUpdateCallbackInterval(_scanningInterval);
     }
 
     private void startProximityService() {
-        proximityManager.connect(new OnServiceReadyListener() {
+        _proximityManager.connect(new OnServiceReadyListener() {
             @Override
             public void onServiceReady() {
                 Log.d("PositionService", "Start scanning");
-                proximityManager.startScanning();
+                _proximityManager.startScanning();
             }
         });
     }
 
     private void stopProximityService() {
         Log.d("PositionService", "Stop scanning");
-        proximityManager.stopScanning();
-        proximityManager.disconnect();
+        _proximityManager.stopScanning();
+        _proximityManager.disconnect();
     }
 
     private void setupBeaconListener() {
-        proximityManager.setIBeaconListener(new IBeaconListener() {
+        _proximityManager.setIBeaconListener(new IBeaconListener() {
             @Override
             public void onIBeaconDiscovered(IBeaconDevice iBeacon, IBeaconRegion region) {}
 
@@ -116,7 +116,7 @@ public class PositionTrackerService implements IPositionService {
                 if (position == null) {
                     return;
                 }
-                positionMatrix[position[0]][position[1]]++;
+                _positionMatrix[position[0]][position[1]]++;
             }
 
             @Override
@@ -126,16 +126,18 @@ public class PositionTrackerService implements IPositionService {
 
     // Filters the beacons returning a list that contains only relevant beacons ordered per decreasing RSSI
     private List<IBeaconDevice> filterBeacons(List<IBeaconDevice> iBeacons) {
+        // order the beacons in the update with RSSI in descending order
         iBeacons.sort(Comparator.comparing(IBeaconDevice::getRssi).reversed());
         List<IBeaconDevice> filteredBeacons = new ArrayList<>();
+
         if ((iBeacons.size() == 1) ||
-                ((iBeacons.get(0).getRssi() - iBeacons.get(1).getRssi()) >= firstBeaconTH)) {
+            ((iBeacons.get(0).getRssi() - iBeacons.get(1).getRssi()) >= _firstBeaconTH)) {
             filteredBeacons.add(iBeacons.get(0));
         }
         else if ((iBeacons.size() == 2) ||
-                ((iBeacons.get(1).getRssi() - iBeacons.get(2).getRssi()) >= secondBeaconTH) ||
+                ((iBeacons.get(1).getRssi() - iBeacons.get(2).getRssi()) >= _secondBeaconTH) ||
                 (iBeacons.size() == 3) ||
-                ((iBeacons.get(2).getRssi() - iBeacons.get(3).getRssi()) >= thirdBeaconTH)) {
+                ((iBeacons.get(2).getRssi() - iBeacons.get(3).getRssi()) >= _thirdBeaconTH)) {
             filteredBeacons.add(iBeacons.get(0));
             filteredBeacons.add(iBeacons.get(1));
         }
@@ -149,18 +151,20 @@ public class PositionTrackerService implements IPositionService {
 
     // Finds the coordinates of the matrix cell giving the list of filtered beacons
     private int[] estimatePosition(List<IBeaconDevice> iBeacons) {
-        if (beaconPositions == null)
+        if (_beaconPositions == null)
             return null;
         int[] position = new int[2];
-        Long rowRssiMax = beaconPositions.get(iBeacons.get(0).getUniqueId()).get("row");
-        Long colRssiMax = beaconPositions.get(iBeacons.get(0).getUniqueId()).get("col");
+        // get indexes of beacon with max RSSI
+        Long rowRssiMax = _beaconPositions.get(iBeacons.get(0).getUniqueId()).get("row");
+        Long colRssiMax = _beaconPositions.get(iBeacons.get(0).getUniqueId()).get("col");
         if (iBeacons.size() == 1) {
             position[0] = rowRssiMax.intValue();
             position[1] = colRssiMax.intValue();
         }
         else if (iBeacons.size() == 2) {
-            Long rowRssiMin = beaconPositions.get(iBeacons.get(1).getUniqueId()).get("row");
-            Long colRssiMin = beaconPositions.get(iBeacons.get(1).getUniqueId()).get("col");
+            Long rowRssiMin = _beaconPositions.get(iBeacons.get(1).getUniqueId()).get("row");
+            Long colRssiMin = _beaconPositions.get(iBeacons.get(1).getUniqueId()).get("col");
+            // estimate the row
             if (rowRssiMax.equals(rowRssiMin))
                 position[0] = rowRssiMax.intValue();
             else {
@@ -172,6 +176,7 @@ public class PositionTrackerService implements IPositionService {
                     position[0] = ((Double) Math.floor(rowAvg)).intValue();
                 }
             }
+            // estimate the column
             if (colRssiMax.equals(colRssiMin))
                 position[1] = colRssiMax.intValue();
             else {
@@ -184,15 +189,16 @@ public class PositionTrackerService implements IPositionService {
                 }
             }
         }
-        else {
+        else { // I'm in a square on the center of the field
             Long rowMax = 0l;
             Long colMax = 0l;
             Long positionRow = rowRssiMax;
             Long positionCol = colRssiMax;
-            for (IBeaconDevice beacon : iBeacons) {
-                rowMax = Long.max(rowMax, beaconPositions.get(beacon.getUniqueId()).get("row"));
-                colMax = Long.max(colMax, beaconPositions.get(beacon.getUniqueId()).get("col"));
+            for (IBeaconDevice beacon : iBeacons) { // get the limits of the field
+                rowMax = Long.max(rowMax, _beaconPositions.get(beacon.getUniqueId()).get("row"));
+                colMax = Long.max(colMax, _beaconPositions.get(beacon.getUniqueId()).get("col"));
             }
+            // moving the estimate in the center
             if ((rowRssiMax.equals(rowMax)) && ((rowRssiMax - 1) >= 0)) {
                 positionRow--;
             }
