@@ -30,9 +30,8 @@ public class PositionTrackerService implements IPositionService {
     private IBaseCallBack _activity;
     private int[][] _positionMatrix;
     private Map<String, Map<String, Long>> _beaconPositions;
-    private final int _firstBeaconTH = 10;
-    private final int _secondBeaconTH = 7;
-    private final int _thirdBeaconTH = 7;
+    private final int _firstBeaconTH = 15;
+    private final int _secondBeaconTH = 10;
 
     public PositionTrackerService(IBaseCallBack activity){
         _activity = activity;
@@ -136,9 +135,7 @@ public class PositionTrackerService implements IPositionService {
             filteredBeacons.add(iBeacons.get(0));
         }
         else if ((iBeacons.size() == 2) ||
-                ((iBeacons.get(1).getRssi() - iBeacons.get(2).getRssi()) >= _secondBeaconTH) ||
-                (iBeacons.size() == 3) ||
-                ((iBeacons.get(2).getRssi() - iBeacons.get(3).getRssi()) >= _thirdBeaconTH)) {
+                ((iBeacons.get(1).getRssi() - iBeacons.get(2).getRssi()) >= _secondBeaconTH)) {
             filteredBeacons.add(iBeacons.get(0));
             filteredBeacons.add(iBeacons.get(1));
         }
