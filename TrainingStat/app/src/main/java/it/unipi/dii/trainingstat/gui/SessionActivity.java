@@ -42,6 +42,7 @@ import it.unipi.dii.trainingstat.service.PositionTrackerService;
 import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
 import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
+import it.unipi.dii.trainingstat.service.interfaces.IPositionService;
 import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountingSteps;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
@@ -56,7 +57,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private int _totalSteps;
 
     private ActivityTrackerService _activityTrackerService;
-    private PositionTrackerService _positionTrackerService;
+    private IPositionService _positionTrackerService;
     private ITrainingSensorService _trainingService;
 
     private ActivityRecognitionClient _activityRecognitionClient;
@@ -183,12 +184,10 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private void initializeActivityRecognition(){
 
         requestPermissions();
-
         if(!areAllPermissionGranted()){
             Toast.makeText(this, "In order to use the app must been provided al permission needed", Toast.LENGTH_SHORT).show();
             finish();
         }
-
 
         _activityRecognitionClient  =  new  ActivityRecognitionClient(this);
         Intent  i  =  new  Intent(this,  TrainingStatIntentService.class);
@@ -217,7 +216,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             task.addOnFailureListener(e -> Log.e(TAG, "Failed to remove activity updates!"));
         }
     }
-
 
     private void requestPermissions() {
         String[] permissionsToRequest = whatOfThosePermissionsAreNotGranted(getNeededPermission());
@@ -277,7 +275,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         // registro il sensore degli step
         _trainingService.registerSensors();
-
+        _positionTrackerService.startScanning();
         _activityTrackerService.startTacking();
 
         _userSession.setStatus(UserSession.STATUS_MONITORING);
@@ -303,8 +301,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         // scollego il sensore degli step
         _trainingService.unregisterSensors();
-
+        _positionTrackerService.stopScanning();
         _activityTrackerService.stopTacking();
+
         _userSession.setStatus(UserSession.STATUS_PAUSED);
         updateDbUserSession();
     }
@@ -314,6 +313,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         startPause.setEnabled(false);
         _statusTV.setText(R.string.terminated);
 
+        // potresti cliccare stop anche dopo aver messo in pausa -> i service sono già stoppati
         if(chronoRunning){
             _chronometer.stop();
             // adesso conterrà tutti i ms passati nella sessione
@@ -321,6 +321,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             _trainingService.unregisterSensors();
             // tengo conto della mancata classificazione dell'attività quando clicco pause
             _activityTrackerService.stopTacking();
+            _positionTrackerService.stopScanning();
         }
         _userSession.setStatus(UserSession.STATUS_TERMINATED);
         _userSession.setEndDate(TSDateUtils.DateToStringIsoDate(TSDateUtils.getCurrentUTCDate()));
