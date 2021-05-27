@@ -84,8 +84,6 @@ public class ResultActivity extends AppCompatActivity {
         //TODO if solo epr debug visivo della heatmap, da rimuovere
         List<List<Integer>> tmpHeatmap = _userSession.getHeatmap();
         int[][] tmpMatrix = UserSession.heatmapToMatrixInt(tmpHeatmap);
-        if( tmpHeatmap == null || tmpHeatmap.size() == 0)
-            tmpMatrix = fakeHeatMap(6, 12);
         heatmapSetData(tmpMatrix);
     }
 
@@ -142,20 +140,6 @@ public class ResultActivity extends AppCompatActivity {
         return max;
     }
 
-    private int[][] fakeHeatMap(int rows, int columns){
-
-        Random random = new Random();
-        int[][] result = new int[rows][columns];
-        int aux = 0;
-
-        for(int i = 0; i < rows; i++){
-            for(int j = 0; j< columns; j++){
-                result[i][j] = (int)(random.nextDouble() * 100);
-            }
-        }
-
-        return result;
-    }
 
     private static int doGradient(double value, double min, double max, int min_color, int max_color) {
         if (value >= max) {
