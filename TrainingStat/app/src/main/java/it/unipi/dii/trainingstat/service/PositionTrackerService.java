@@ -125,8 +125,18 @@ public class PositionTrackerService implements IPositionService {
 
     // Filters the beacons returning a list that contains only relevant beacons ordered per decreasing RSSI
     private List<IBeaconDevice> filterBeacons(List<IBeaconDevice> scanningIBeacons) {
+        if (scanningIBeacons == null)
+            return null;
+        // Get from the scanning list only the beacon contained in the map
+        List<IBeaconDevice> iBeacons = new ArrayList<>();
+        for (IBeaconDevice iBeacon : scanningIBeacons) {
+            if (_beaconPositions.containsKey(iBeacon.getUniqueId())) {
+                iBeacons.add(iBeacon);
+            }
+        }
+        if (iBeacons.size() == 0)
+            return null;
         // order the beacons in the update with RSSI in descending order
-        List<IBeaconDevice> iBeacons = new ArrayList<>(scanningIBeacons);
         iBeacons.sort(Comparator.comparing(IBeaconDevice::getRssi).reversed());
         List<IBeaconDevice> filteredBeacons = new ArrayList<>();
 
@@ -149,7 +159,7 @@ public class PositionTrackerService implements IPositionService {
 
     // Finds the coordinates of the matrix cell giving the list of filtered beacons
     private int[] estimatePosition(List<IBeaconDevice> iBeacons) {
-        if (_beaconPositions == null)
+        if ((_beaconPositions == null) || (iBeacons == null))
             return null;
         int[] position = new int[2];
         // get indexes of beacon with max RSSI
