@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -56,6 +57,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private boolean chronoRunning;
     private int _totalSteps;
 
+
+    private PowerManager _powerManager;
+    private PowerManager.WakeLock _wakeLock;
     private ActivityTrackerService _activityTrackerService;
     private IPositionService _positionTrackerService;
     private ITrainingSensorService _trainingService;
@@ -97,6 +101,10 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _statusTV = findViewById(R.id.sessionStatusTV);
         _activityStatusTV = findViewById(R.id.sessionStatusActivityTV);
         _activityStatusTV.setText(getString(R.string.activity_status_unknown).toUpperCase());
+
+        _powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        _wakeLock = _powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "TrainingStat::WakelockTag");
 
         // recupero username e session id
         Intent i = getIntent();
@@ -273,6 +281,8 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _chronometer.setBase(SystemClock.elapsedRealtime() - _totalActivityTime);
         _chronometer.start();
 
+        _wakeLock.acquire();
+
         // registro il sensore degli step
         _trainingService.registerSensors();
         _positionTrackerService.startScanning();
@@ -296,6 +306,8 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         _chronometer.stop();
 
+        _wakeLock.release();
+
         // contiene il tempo passato fino adesso
         _totalActivityTime = SystemClock.elapsedRealtime() - _chronometer.getBase();
 
@@ -316,6 +328,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         // potresti cliccare stop anche dopo aver messo in pausa -> i service sono già stoppati
         if(chronoRunning){
             _chronometer.stop();
+            _wakeLock.release();
             // adesso conterrà tutti i ms passati nella sessione
             _totalActivityTime = SystemClock.elapsedRealtime() - _chronometer.getBase();
             _trainingService.unregisterSensors();
