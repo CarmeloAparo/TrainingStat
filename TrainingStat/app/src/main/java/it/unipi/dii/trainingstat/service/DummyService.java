@@ -1,8 +1,8 @@
 package it.unipi.dii.trainingstat.service;
 
-import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
+import it.unipi.dii.trainingstat.service.interfaces.IStepSensorService;
 
-public class DummyService implements ITrainingSensorService {
+public class DummyService implements IStepSensorService {
 
 
     @Override

@@ -9,7 +9,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -41,11 +40,12 @@ import it.unipi.dii.trainingstat.service.ActivityTrackerService;
 import it.unipi.dii.trainingstat.service.DummyService;
 import it.unipi.dii.trainingstat.service.PositionTrackerService;
 import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
-import it.unipi.dii.trainingstat.service.TrainingStatSensorService;
+import it.unipi.dii.trainingstat.service.StepSensorService;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
 import it.unipi.dii.trainingstat.service.interfaces.IPositionService;
-import it.unipi.dii.trainingstat.service.interfaces.ITrainingSensorService;
+import it.unipi.dii.trainingstat.service.interfaces.IStepSensorService;
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountingSteps;
+import it.unipi.dii.trainingstat.utils.Constant;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
 
 
@@ -57,12 +57,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private boolean chronoRunning;
     private int _totalSteps;
 
-
-    private PowerManager _powerManager;
-    private PowerManager.WakeLock _wakeLock;
     private ActivityTrackerService _activityTrackerService;
     private IPositionService _positionTrackerService;
-    private ITrainingSensorService _trainingService;
+    private IStepSensorService _StepSensorService;
 
     private ActivityRecognitionClient _activityRecognitionClient;
     private PendingIntent _pendingIntent;
@@ -85,6 +82,18 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         }
     };
 
+    BroadcastReceiver _stepCounterReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int steps = intent.getIntExtra("Steps", 0);
+
+            Log.d("[SessionActivity] steps reported", String.valueOf(steps));
+
+            passStepCounter(steps);
+        }
+    };
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,9 +111,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _activityStatusTV = findViewById(R.id.sessionStatusActivityTV);
         _activityStatusTV.setText(getString(R.string.activity_status_unknown).toUpperCase());
 
-        _powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        _wakeLock = _powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "TrainingStat::WakelockTag");
 
         // recupero username e session id
         Intent i = getIntent();
@@ -133,12 +139,14 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
                 _activityUpdateReceiver,
                 new IntentFilter(ActivityTrackerService.ACTIVITY_STATUS_UPDATE)
         );
-        try {
-            _trainingService = new TrainingStatSensorService(this);
-        } catch (NoStepCounterSensorAvailableException e) {
-            Toast.makeText(this, R.string.step_sensor_unavailable_toast, Toast.LENGTH_SHORT).show();
-            _trainingService = new DummyService();
-        }
+
+        LocalBroadcastManager.getInstance(
+                getApplicationContext()).registerReceiver(
+                _stepCounterReceiver,
+                new IntentFilter(Constant.STEP_COUNTER_INTENT_FILTER)
+        );
+
+
     }
 
     private void initializeGuiComponents(String username) {
@@ -237,7 +245,8 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             return new String[]{
                     Manifest.permission.ACTIVITY_RECOGNITION,
-                    Manifest.permission.ACCESS_FINE_LOCATION};
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.FOREGROUND_SERVICE};
         }else{
             return new String[]{
                     "com.google.android.gms.permission.ACTIVITY_RECOGNITION",
@@ -281,10 +290,8 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _chronometer.setBase(SystemClock.elapsedRealtime() - _totalActivityTime);
         _chronometer.start();
 
-        _wakeLock.acquire();
-
         // registro il sensore degli step
-        _trainingService.registerSensors();
+        startStepSensorService();
         _positionTrackerService.startScanning();
         _activityTrackerService.startTacking();
 
@@ -306,13 +313,11 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         _chronometer.stop();
 
-        _wakeLock.release();
-
         // contiene il tempo passato fino adesso
         _totalActivityTime = SystemClock.elapsedRealtime() - _chronometer.getBase();
 
         // scollego il sensore degli step
-        _trainingService.unregisterSensors();
+        stopStepSensorService();
         _positionTrackerService.stopScanning();
         _activityTrackerService.stopTacking();
 
@@ -328,10 +333,9 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         // potresti cliccare stop anche dopo aver messo in pausa -> i service sono già stoppati
         if(chronoRunning){
             _chronometer.stop();
-            _wakeLock.release();
             // adesso conterrà tutti i ms passati nella sessione
             _totalActivityTime = SystemClock.elapsedRealtime() - _chronometer.getBase();
-            _trainingService.unregisterSensors();
+            stopStepSensorService();
             // tengo conto della mancata classificazione dell'attività quando clicco pause
             _activityTrackerService.stopTacking();
             _positionTrackerService.stopScanning();
@@ -364,6 +368,17 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         TextView stepCounterTV = findViewById(R.id.sessionStepCounterTV);
         stepCounterTV.setText(String.valueOf(_totalSteps));
     }
+
+    public void startStepSensorService() {
+        Intent serviceIntent = new Intent(this, StepSensorService.class);
+        ContextCompat.startForegroundService(this, serviceIntent);
+    }
+    public void stopStepSensorService() {
+        Intent serviceIntent = new Intent(this, StepSensorService.class);
+        stopService(serviceIntent);
+    }
+
+
 
     public void askPermissions(String[] permissions, int permissionCode) {
         ActivityCompat.requestPermissions(this,
