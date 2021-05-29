@@ -373,12 +373,11 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         Intent serviceIntent = new Intent(this, StepSensorService.class);
         ContextCompat.startForegroundService(this, serviceIntent);
     }
+
     public void stopStepSensorService() {
         Intent serviceIntent = new Intent(this, StepSensorService.class);
         stopService(serviceIntent);
     }
-
-
 
     public void askPermissions(String[] permissions, int permissionCode) {
         ActivityCompat.requestPermissions(this,

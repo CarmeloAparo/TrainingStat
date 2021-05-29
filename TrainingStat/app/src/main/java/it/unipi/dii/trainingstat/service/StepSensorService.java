@@ -14,6 +14,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -28,7 +29,6 @@ import static it.unipi.dii.trainingstat.App.CHANNEL_ID;
 
 public class StepSensorService extends Service implements SensorEventListener, IStepSensorService {
 
-    private Context _context;
     private SensorManager _sensorManager;
     private Sensor _stepSensor;
 
@@ -91,13 +91,9 @@ public class StepSensorService extends Service implements SensorEventListener, I
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Intent notificationIntent = new Intent(this, SessionActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Step Service")
                 .setSmallIcon(R.drawable.ic_android)
-                .setContentIntent(pendingIntent)
                 .build();
         startForeground(1, notification);
 
