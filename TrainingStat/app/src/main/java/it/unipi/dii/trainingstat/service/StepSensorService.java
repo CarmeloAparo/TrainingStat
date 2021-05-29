@@ -2,9 +2,7 @@ package it.unipi.dii.trainingstat.service;
 
 import android.app.Activity;
 import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -19,15 +17,13 @@ import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import it.unipi.dii.trainingstat.R;
-import it.unipi.dii.trainingstat.gui.SessionActivity;
 import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
-import it.unipi.dii.trainingstat.service.interfaces.IStepSensorService;
 import it.unipi.dii.trainingstat.utils.Constant;
 
 import static it.unipi.dii.trainingstat.App.CHANNEL_ID;
 
 
-public class StepSensorService extends Service implements SensorEventListener, IStepSensorService {
+public class StepSensorService extends Service implements SensorEventListener {
 
     private SensorManager _sensorManager;
     private Sensor _stepSensor;
@@ -72,12 +68,10 @@ public class StepSensorService extends Service implements SensorEventListener, I
         Log.i("DEBUG", String.format("Accuracy changed to <%d>", accuracy));
     }
 
-    @Override
     public void unregisterSensors() {
         _sensorManager.unregisterListener(this, _stepSensor);
     }
 
-    @Override
     public void registerSensors() {
         _sensorManager.registerListener(this, _stepSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }

@@ -37,13 +37,10 @@ import it.unipi.dii.trainingstat.R;
 import it.unipi.dii.trainingstat.entities.TrainingSession;
 import it.unipi.dii.trainingstat.entities.UserSession;
 import it.unipi.dii.trainingstat.service.ActivityTrackerService;
-import it.unipi.dii.trainingstat.service.DummyService;
 import it.unipi.dii.trainingstat.service.PositionTrackerService;
 import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
 import it.unipi.dii.trainingstat.service.StepSensorService;
-import it.unipi.dii.trainingstat.service.exception.NoStepCounterSensorAvailableException;
 import it.unipi.dii.trainingstat.service.interfaces.IPositionService;
-import it.unipi.dii.trainingstat.service.interfaces.IStepSensorService;
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountingSteps;
 import it.unipi.dii.trainingstat.utils.Constant;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
@@ -59,7 +56,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     private ActivityTrackerService _activityTrackerService;
     private IPositionService _positionTrackerService;
-    private IStepSensorService _StepSensorService;
 
     private ActivityRecognitionClient _activityRecognitionClient;
     private PendingIntent _pendingIntent;
@@ -362,7 +358,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         return this;
     }
 
-    @Override
+
     public void passStepCounter(int steps) {
         _totalSteps += steps;
         TextView stepCounterTV = findViewById(R.id.sessionStepCounterTV);

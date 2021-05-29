@@ -69,12 +69,20 @@ public class PositionTrackerService implements IPositionService {
 
     @Override
     public void startScanning() {
-        startProximityService();
+        _proximityManager.connect(new OnServiceReadyListener() {
+            @Override
+            public void onServiceReady() {
+                Log.d("PositionService", "Start scanning");
+                _proximityManager.startScanning();
+            }
+        });
     }
 
     @Override
     public void stopScanning() {
-        stopProximityService();
+        Log.d("PositionService", "Stop scanning");
+        _proximityManager.stopScanning();
+        _proximityManager.disconnect();
     }
 
     private void configureProximityManager() {
@@ -85,22 +93,6 @@ public class PositionTrackerService implements IPositionService {
                 .scanPeriod(ScanPeriod.RANGING)     // Scan duration and intervals
                 .activityCheckConfiguration(ActivityCheckConfiguration.MINIMAL)
                 .deviceUpdateCallbackInterval(_scanningInterval);
-    }
-
-    private void startProximityService() {
-        _proximityManager.connect(new OnServiceReadyListener() {
-            @Override
-            public void onServiceReady() {
-                Log.d("PositionService", "Start scanning");
-                _proximityManager.startScanning();
-            }
-        });
-    }
-
-    private void stopProximityService() {
-        Log.d("PositionService", "Stop scanning");
-        _proximityManager.stopScanning();
-        _proximityManager.disconnect();
     }
 
     private void setupBeaconListener() {
