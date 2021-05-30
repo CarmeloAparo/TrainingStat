@@ -65,14 +65,6 @@ public class PositionTrackerService extends Service {
             return null;
         }
         _beaconPositions = positions;
-        Long rowMax = 0l;
-        Long colMax = 0l;
-        for (Map.Entry<String, Map<String, Long>> beaconPosition : _beaconPositions.entrySet()) {
-            rowMax = Long.max(rowMax, beaconPosition.getValue().get("row"));
-            colMax = Long.max(colMax, beaconPosition.getValue().get("col"));
-        }
-
-
         return null;
     }
 
@@ -109,9 +101,7 @@ public class PositionTrackerService extends Service {
 
         return START_NOT_STICKY;
     }
-
-
-
+    
     private void configureProximityManager() {
         KontaktSDK.initialize("wLvvNlIMqZdHvvTVrhsgmAySANYdDplM");
         _proximityManager = ProximityManagerFactory.create(_activity);
