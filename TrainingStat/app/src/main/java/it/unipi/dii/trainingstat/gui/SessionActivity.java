@@ -40,7 +40,6 @@ import it.unipi.dii.trainingstat.service.ActivityTrackerService;
 import it.unipi.dii.trainingstat.service.PositionTrackerService;
 import it.unipi.dii.trainingstat.service.TrainingStatIntentService;
 import it.unipi.dii.trainingstat.service.StepSensorService;
-import it.unipi.dii.trainingstat.service.interfaces.IPositionService;
 import it.unipi.dii.trainingstat.service.interfaces.callback.ICallBackForCountingSteps;
 import it.unipi.dii.trainingstat.utils.Constant;
 import it.unipi.dii.trainingstat.utils.TSDateUtils;
@@ -55,7 +54,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private int _totalSteps;
 
     private ActivityTrackerService _activityTrackerService;
-    private IPositionService _positionTrackerService;
+
 
     private ActivityRecognitionClient _activityRecognitionClient;
     private PendingIntent _pendingIntent;
@@ -66,6 +65,8 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
     private Chronometer _chronometer;
     private TextView _activityStatusTV;
     private TextView _statusTV;
+
+    private int[][] _heatmap;
 
     BroadcastReceiver _activityUpdateReceiver = new BroadcastReceiver() {
         @Override
@@ -88,6 +89,20 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             passStepCounter(steps);
         }
     };
+
+    BroadcastReceiver _positionTrackerReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int row = intent.getIntExtra("row", 0);
+            int column = intent.getIntExtra("column", 0);
+            int value = intent.getIntExtra("value", 0);
+
+            Log.d("[SessionActivity] a position reported", String.valueOf(value));
+
+            updateHeatmap(row, column, value);
+        }
+    };
+
 
 
     @Override
@@ -125,10 +140,13 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     private void initializeServices() {
         _activityTrackerService = new ActivityTrackerService(this);
-        _positionTrackerService = new PositionTrackerService(this);
 
         initializeActivityRecognition();
         startMonitoringActivityRecognition(1000);
+
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.getBeaconPositions(this::setBeaconPosition);
+
 
         LocalBroadcastManager.getInstance(
                 getApplicationContext()).registerReceiver(
@@ -142,6 +160,11 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
                 new IntentFilter(Constant.STEP_COUNTER_INTENT_FILTER)
         );
 
+        LocalBroadcastManager.getInstance(
+                getApplicationContext()).registerReceiver(
+                _positionTrackerReceiver,
+                new IntentFilter(PositionTrackerService.POSITION_TRACKER_INTENT_FILTER)
+        );
 
     }
 
@@ -187,8 +210,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         _userSession.setWalkPerc(percentages.get(TrainingStatIntentService.ACTIVITY_WALKING));
         _userSession.setRunPerc(percentages.get(TrainingStatIntentService.ACTIVITY_RUNNING));
         _userSession.setUnknownPerc(percentages.get(TrainingStatIntentService.ACTIVITY_UNKNOWN));
-        int[][] matrixHeatmap = _positionTrackerService.getHeatmap();
-        List<List<Integer>> heatmap = UserSession.matrixIntToHeatmap(matrixHeatmap);
+        List<List<Integer>> heatmap = UserSession.matrixIntToHeatmap(_heatmap);
         _userSession.setHeatmap(heatmap);
         dm.writeUserSession(_trainingSessionId, _userSession);
     }
@@ -288,7 +310,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         // registro il sensore degli step
         startStepSensorService();
-        _positionTrackerService.startScanning();
+        startPositionTrackerService();
         _activityTrackerService.startTacking();
 
         _userSession.setStatus(UserSession.STATUS_MONITORING);
@@ -314,7 +336,6 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
         // scollego il sensore degli step
         stopStepSensorService();
-        _positionTrackerService.stopScanning();
         _activityTrackerService.stopTacking();
 
         _userSession.setStatus(UserSession.STATUS_PAUSED);
@@ -334,7 +355,7 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
             stopStepSensorService();
             // tengo conto della mancata classificazione dell'attività quando clicco pause
             _activityTrackerService.stopTacking();
-            _positionTrackerService.stopScanning();
+            stopPositionTrackerService();
         }
         _userSession.setStatus(UserSession.STATUS_TERMINATED);
         _userSession.setEndDate(TSDateUtils.DateToStringIsoDate(TSDateUtils.getCurrentUTCDate()));
@@ -365,12 +386,12 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
         stepCounterTV.setText(String.valueOf(_totalSteps));
     }
 
-    public void startStepSensorService() {
+    private void startStepSensorService() {
         Intent serviceIntent = new Intent(this, StepSensorService.class);
         ContextCompat.startForegroundService(this, serviceIntent);
     }
 
-    public void stopStepSensorService() {
+    private void stopStepSensorService() {
         Intent serviceIntent = new Intent(this, StepSensorService.class);
         stopService(serviceIntent);
     }
@@ -402,6 +423,59 @@ public class SessionActivity extends AppCompatActivity implements ICallBackForCo
 
     }
 
+
+    public Void setBeaconPosition(Map<String, Map<String, Long>> positions) {
+        if (positions == null) {
+            Toast.makeText(this, "Beacon positions not found", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+        Map<String, Map<String, Long>> _beaconPositions;
+        _beaconPositions = positions;
+        Long rowMax = 0l;
+        Long colMax = 0l;
+        for (Map.Entry<String, Map<String, Long>> beaconPosition : _beaconPositions.entrySet()) {
+            rowMax = Long.max(rowMax, beaconPosition.getValue().get("row"));
+            colMax = Long.max(colMax, beaconPosition.getValue().get("col"));
+        }
+        _heatmap = new int[rowMax.intValue() + 1][colMax.intValue() + 1];
+        return null;
+    }
+
+
+    private void updateHeatmap(int row, int column, int value){
+
+        // se non sto monitorando non aggiorno la heatmap
+        if (!chronoRunning){
+            return;
+        }
+
+        int row_max = _heatmap.length;
+
+        if (row_max == 0 || row >= row_max){
+            Log.e(TAG, "Row index too big");
+            return;
+        }
+
+        int column_max = _heatmap[0].length;
+
+        if(column_max == 0 || column >= column_max){
+            Log.e(TAG, "Column index too big");
+            return;
+        }
+
+        _heatmap[row][column] += value;
+    }
+
+
+    private void startPositionTrackerService() {
+        Intent serviceIntent = new Intent(this, PositionTrackerService.class);
+        ContextCompat.startForegroundService(this, serviceIntent);
+    }
+
+    private void stopPositionTrackerService() {
+        Intent serviceIntent = new Intent(this, PositionTrackerService.class);
+        stopService(serviceIntent);
+    }
 
 }
 

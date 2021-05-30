@@ -1,7 +1,16 @@
 package it.unipi.dii.trainingstat.service;
 
+import android.app.Notification;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.kontakt.sdk.android.ble.configuration.ActivityCheckConfiguration;
 import com.kontakt.sdk.android.ble.configuration.ScanMode;
@@ -21,31 +30,38 @@ import java.util.List;
 import java.util.Map;
 
 import it.unipi.dii.trainingstat.DatabaseManager;
-import it.unipi.dii.trainingstat.service.interfaces.IPositionService;
-import it.unipi.dii.trainingstat.service.interfaces.callback.IBaseCallBack;
+import it.unipi.dii.trainingstat.R;
+import it.unipi.dii.trainingstat.utils.Constant;
 
-public class PositionTrackerService implements IPositionService {
+import static it.unipi.dii.trainingstat.App.CHANNEL_ID;
+
+public class PositionTrackerService extends Service {
     private ProximityManager _proximityManager;
     private final int _scanningInterval = 500;   // ms
-    private IBaseCallBack _activity;
-    private int[][] _positionMatrix;
+    private Context _activity;
     private Map<String, Map<String, Long>> _beaconPositions;
     private final int _firstBeaconTH = 15;
     private final int _secondBeaconTH = 10;
 
-    public PositionTrackerService(IBaseCallBack activity){
-        _activity = activity;
+    public final static String POSITION_TRACKER_INTENT_FILTER = "Position Tracker data";
+
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        _activity = getApplicationContext();
         configureProximityManager();
         setupBeaconListener();
-        _positionMatrix = null;
         _beaconPositions = null;
         DatabaseManager databaseManager = new DatabaseManager();
         databaseManager.getBeaconPositions(this::setBeaconPosition);
+
     }
 
     public Void setBeaconPosition(Map<String, Map<String, Long>> positions) {
         if (positions == null) {
-            Toast.makeText(_activity.getContext(), "Beacon positions not found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(_activity, "Beacon positions not found", Toast.LENGTH_SHORT).show();
             return null;
         }
         _beaconPositions = positions;
@@ -55,20 +71,34 @@ public class PositionTrackerService implements IPositionService {
             rowMax = Long.max(rowMax, beaconPosition.getValue().get("row"));
             colMax = Long.max(colMax, beaconPosition.getValue().get("col"));
         }
-        _positionMatrix = new int[rowMax.intValue() + 1][colMax.intValue() + 1];
-        for (int[] row : _positionMatrix) {
-            Arrays.fill(row, 0);
-        }
+
+
         return null;
     }
 
+
     @Override
-    public int[][] getHeatmap() {
-        return _positionMatrix;
+    public void onDestroy() {
+        Log.d("PositionService", "Stop scanning");
+        if (_proximityManager != null) {
+            _proximityManager.stopScanning();
+            _proximityManager.disconnect();
+            _proximityManager = null;
+        }
+        stopSelf();
+        Toast.makeText(this, "Scanning service stopped.", Toast.LENGTH_SHORT).show();
+        super.onDestroy();
     }
 
     @Override
-    public void startScanning() {
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Position Tracker service")
+                .setSmallIcon(R.drawable.ic_android)
+                .build();
+        startForeground(2, notification);
+
         _proximityManager.connect(new OnServiceReadyListener() {
             @Override
             public void onServiceReady() {
@@ -76,18 +106,15 @@ public class PositionTrackerService implements IPositionService {
                 _proximityManager.startScanning();
             }
         });
+
+        return START_NOT_STICKY;
     }
 
-    @Override
-    public void stopScanning() {
-        Log.d("PositionService", "Stop scanning");
-        _proximityManager.stopScanning();
-        _proximityManager.disconnect();
-    }
+
 
     private void configureProximityManager() {
         KontaktSDK.initialize("wLvvNlIMqZdHvvTVrhsgmAySANYdDplM");
-        _proximityManager = ProximityManagerFactory.create(_activity.getContext());
+        _proximityManager = ProximityManagerFactory.create(_activity);
         _proximityManager.configuration()
                 .scanMode(ScanMode.LOW_LATENCY)     // Scan performance (Balanced, Low Latency or Low Power)
                 .scanPeriod(ScanPeriod.RANGING)     // Scan duration and intervals
@@ -107,7 +134,7 @@ public class PositionTrackerService implements IPositionService {
                 if (position == null) {
                     return;
                 }
-                _positionMatrix[position[0]][position[1]]++;
+                sendMessageToActivity(position[0], position[1], 1 );
             }
 
             @Override
@@ -216,4 +243,23 @@ public class PositionTrackerService implements IPositionService {
         }
         return position;
     }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+
+    private void sendMessageToActivity(int row, int column, int value) {
+        Intent intent = new Intent(POSITION_TRACKER_INTENT_FILTER);
+
+        intent.putExtra("row", row);
+        intent.putExtra("column", column);
+        intent.putExtra("value", value);
+
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+    }
+
+
 }

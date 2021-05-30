@@ -100,14 +100,12 @@ public class StepSensorService extends Service implements SensorEventListener {
         return START_NOT_STICKY;
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
         unregisterSensors();
         stopSelf();
     }
-
 
 
 }

@@ -9,6 +9,8 @@ import android.os.Build;
 public class App extends Application{
 
     public static final String CHANNEL_ID = "TrainStatServicesNotificationChannel";
+
+
     @Override
     public void onCreate() {
         super.onCreate();
